@@ -1,0 +1,582 @@
+.landing {
+  --cf-surface: #fff;
+  --cf-ink-strong: #202020;
+  --cf-ink: #242424;
+  --cf-ink-muted: #626262;
+  --cf-ink-tab: #777;
+  --cf-ink-soft: #888;
+  --cf-ink-dim: #999;
+  --cf-ink-dimmest: #aaa;
+  --cf-ink-warm: #282826;
+  --cf-ink-muted-warm: #5f5f5a;
+  --cf-ink-soft-warm: #64645f;
+  --cf-line: #dedede;
+  --cf-line-pill: #d6d6d6;
+  --cf-line-dashed: #d8d8d8;
+  --cf-orange: #f6821f;
+  --cf-orange-dark: #da5b16;
+  --cf-cta: #ff5e1f;
+  --cf-cta-fg: #fff;
+  --cf-focus-cta: rgba(255, 94, 31, 0.28);
+  --cf-shadow: 0 1px 2px rgba(29, 29, 27, 0.04), 0 18px 44px -18px rgba(29, 29, 27, 0.18);
+  --cf-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --cf-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  width: 100%;
+  text-align: left;
+  color: var(--cf-ink);
+  background: var(--cf-surface);
+  font-family: var(--cf-sans);
+  color-scheme: light;
+}
+
+.landing h1,
+.landing h2,
+.landing h3 {
+  color: var(--cf-ink-strong);
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.landing p {
+  color: var(--cf-ink-muted);
+  line-height: 155%;
+  margin: 0;
+}
+
+.landing a {
+  font-family: inherit;
+}
+
+.landing-eyebrow,
+.landing-eyebrow-num {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--cf-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--cf-orange-dark);
+  text-transform: uppercase;
+}
+
+/* Nav */
+
+.landing-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 40px;
+}
+
+/* Linhas divisórias entre seções — desenhadas via JS (ver AnimatedLine em
+   LandingPage.tsx), não por border estático, pra animar quando entram na
+   tela. Sólida por padrão; a tracejada usa um gradiente repetido em vez de
+   border-top porque um elemento com altura 0 (só border) nunca é detectado
+   pelo IntersectionObserver que a framer-motion usa no whileInView — a
+   animação nunca disparava. Mantendo 1px de altura real em ambas resolve
+   isso e ainda dá pra "desenhar" a linha com clip-path normalmente. */
+
+.landing-line-wrap {
+  width: 100%;
+  height: 1px;
+}
+
+.landing-line {
+  width: 100%;
+  height: 1px;
+  background: var(--cf-line);
+}
+
+.landing-line--dashed {
+  background-color: transparent;
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--cf-line-dashed) 0,
+    var(--cf-line-dashed) 5px,
+    transparent 5px,
+    transparent 10px
+  );
+  background-size: 10px 1px;
+  background-repeat: repeat-x;
+}
+
+/* Estoura o container de 1126px e vai até a borda real da janela. Sem isso,
+   a linha fica limitada à largura do conteúdo (comportamento padrão). */
+.landing-line--page {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+}
+
+.landing-brand-logo {
+  display: block;
+  color: var(--cf-ink-strong);
+}
+
+.landing-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: var(--cf-cta);
+  color: var(--cf-cta-fg);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  border: 1px solid var(--cf-cta);
+  white-space: nowrap;
+}
+
+.landing-pill--large {
+  padding: 10px 20px;
+  font-size: 15px;
+}
+
+.landing-outline-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--cf-line-pill);
+  background: var(--cf-surface);
+  color: var(--cf-ink);
+  font-size: 13.5px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.landing-text-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid var(--cf-ink-dimmest);
+  color: var(--cf-ink);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+/* Hero */
+
+.landing-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 64px 24px 56px;
+}
+
+.landing-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  color: var(--cf-ink-strong);
+}
+
+.landing-hero-badge-divider {
+  width: 1px;
+  height: 13px;
+  background: var(--cf-line-pill);
+}
+
+.landing-hero-badge span {
+  font-family: var(--cf-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  color: var(--cf-orange-dark);
+}
+
+.landing-hero h1 {
+  font-size: 52px;
+  line-height: 106%;
+  letter-spacing: -0.036em;
+  margin: 0 0 20px;
+  max-width: 700px;
+}
+
+.landing-lede {
+  max-width: 560px;
+  margin: 0 0 28px !important;
+  font-size: 15.1px;
+}
+
+/* Steps / tabs */
+
+.landing-tabs {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  background: var(--cf-surface);
+}
+
+.landing-tab {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 20px;
+  border-right: 1px solid var(--cf-line);
+  cursor: default;
+}
+
+.landing-tab:last-child {
+  border-right: none;
+}
+
+.landing-tab strong {
+  color: var(--cf-ink-tab);
+  font-size: 14px;
+  font-weight: 400;
+  transition: color 0.25s ease;
+}
+
+.landing-tab.is-active strong {
+  color: var(--cf-ink-strong);
+}
+
+.landing-tab.is-active .landing-eyebrow-num {
+  color: var(--cf-orange-dark);
+}
+
+.landing-tab:not(.is-active) .landing-eyebrow-num {
+  color: var(--cf-ink-dimmest);
+}
+
+.landing-tab-desc {
+  font-size: 11.4px;
+  color: var(--cf-ink-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.landing-tab-underline {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--cf-orange);
+}
+
+/* Em telas estreitas os 5 passos não cabem numa grade sem espremer o texto
+   (e 5 itens não fecham direito em 2 colunas — sobra 1 sozinho na última
+   linha). Em vez disso a seção vira uma faixa com scroll horizontal e
+   snap: cada card ocupa a maior parte da largura, deixando uma fatia do
+   próximo visível como dica de que dá pra arrastar. O passo ativo também
+   rola sozinho pra dentro da área visível (ver o useEffect de activeStep
+   em LandingPage.tsx), então quem não mexer na tela ainda vê os 5 passarem. */
+@media (max-width: 760px) {
+  .landing-tabs {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 20px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent 100%);
+    mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent 100%);
+  }
+
+  .landing-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .landing-tab {
+    flex: 0 0 auto;
+    width: 72vw;
+    max-width: 260px;
+    scroll-snap-align: start;
+  }
+}
+
+/* Split section (open source) */
+
+.landing-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.landing-split-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 18px;
+  padding: 56px 48px;
+  border-right: 1px solid var(--cf-line);
+}
+
+.landing-split-text h2 {
+  font-size: 40px;
+  line-height: 110%;
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+
+.landing-split-text p {
+  font-size: 16.5px;
+  max-width: 460px;
+}
+
+.landing-split-text .landing-text-link {
+  margin-top: 4px;
+  align-self: flex-start;
+}
+
+.landing-inline-link {
+  color: var(--cf-orange-dark);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 600;
+}
+
+.landing-inline-link:hover {
+  color: var(--cf-orange);
+}
+
+.landing-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--cf-line);
+  gap: 1px;
+}
+
+.landing-grid--compat {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.landing-grid-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 108px;
+  padding: 20px;
+  background: var(--cf-surface);
+  font-size: 12.5px;
+  color: var(--cf-ink-soft-warm);
+  text-align: center;
+  transition: background 0.2s ease;
+}
+
+.landing-grid-cell:hover {
+  background: #fafafa;
+}
+
+.landing-grid-cell--muted {
+  color: var(--cf-ink-dim);
+}
+
+.landing-grid-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #fff5eb;
+  border: 1px solid #f6d9b8;
+  color: var(--cf-orange-dark);
+}
+
+.landing-grid-plus {
+  font-family: var(--cf-mono);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Context / "how it works" */
+
+.landing-context {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 64px 24px;
+}
+
+.landing-context h2 {
+  font-size: 34px;
+  letter-spacing: -0.03em;
+  margin: 10px 0 16px;
+}
+
+.landing-context p {
+  max-width: 620px;
+  font-size: 15.1px;
+}
+
+.landing-context-reads {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  height: 78px;
+  margin-bottom: 28px;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 76%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 76%, transparent 100%);
+}
+
+.landing-context-track {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.landing-context-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 20px;
+  font-size: 12.5px;
+  color: var(--cf-ink-soft);
+  white-space: nowrap;
+}
+
+.landing-context-row svg {
+  flex-shrink: 0;
+  color: var(--cf-ink-dimmest);
+}
+
+.landing-context-row .landing-context-chevron {
+  margin-left: auto;
+  color: var(--cf-ink-dimmest);
+}
+
+/* Security */
+
+.landing-security {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.landing-security-text {
+  padding: 56px 40px;
+  border-right: 1px solid var(--cf-line);
+}
+
+.landing-security-text h2 {
+  font-size: 34px;
+  line-height: 112%;
+  letter-spacing: -0.03em;
+  margin: 10px 0 16px;
+}
+
+.landing-security-text p {
+  font-size: 15.1px;
+  margin-bottom: 12px !important;
+}
+
+.landing-security-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.landing-security-list li {
+  display: flex;
+  gap: 16px;
+  padding: 28px 40px;
+  border-bottom: 1px solid var(--cf-line);
+}
+
+.landing-security-list li:last-child {
+  border-bottom: none;
+}
+
+.landing-security-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: #fff5eb;
+  color: var(--cf-orange-dark);
+}
+
+.landing-security-list h3 {
+  font-size: 17px;
+  font-weight: 400;
+  color: var(--cf-ink-warm);
+  margin: 0 0 8px;
+}
+
+.landing-security-list p {
+  font-size: 13.2px;
+  color: var(--cf-ink-soft-warm);
+  margin: 0;
+}
+
+/* CTA */
+
+.landing-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 72px 24px;
+}
+
+.landing-cta h2 {
+  font-size: 34px;
+  letter-spacing: -0.03em;
+  margin: 10px 0 24px;
+}
+
+/* Footer */
+
+.landing-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 40px;
+  font-size: 13.3px;
+  color: var(--cf-ink-soft);
+}
+
+.landing-footer a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--cf-ink-soft);
+  text-decoration: none;
+}
+
+.landing-footer a:hover {
+  color: var(--cf-ink);
+}
+
+@media (max-width: 760px) {
+  .landing-hero h1 {
+    font-size: 34px;
+  }
+
+  .landing-split,
+  .landing-security {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-split-text,
+  .landing-security-text {
+    border-right: none;
+    border-bottom: 1px solid var(--cf-line);
+  }
+
+  .landing-grid--compat {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .landing-security-list li {
+    padding: 20px 24px;
+  }
+}
