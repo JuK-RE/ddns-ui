@@ -274,13 +274,6 @@
   color: var(--text);
 }
 
-@media (prefers-color-scheme: dark) {
-  .session-status--ativa {
-    background: rgba(46, 160, 67, 0.2);
-    color: #7ee2a8;
-  }
-}
-
 .sessions-list time {
   margin-left: auto;
   font-size: 12px;
