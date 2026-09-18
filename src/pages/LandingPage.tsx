@@ -1,7 +1,24 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { motion, useInView } from 'framer-motion'
-import { Router, Terminal, RefreshCw, FileCode2, Lock, ShieldCheck, ScrollText, ChevronRight, ArrowRight, Globe } from 'lucide-react'
+import { motion, AnimatePresence, useInView, useMotionValue, animate as animateValue } from 'framer-motion'
+import {
+  Router,
+  Terminal,
+  RefreshCw,
+  FileCode2,
+  Lock,
+  ShieldCheck,
+  ScrollText,
+  ArrowRight,
+  Globe,
+  Search,
+  Zap,
+  Save,
+  CheckCircle2,
+  XCircle,
+  Circle,
+  Loader2,
+} from 'lucide-react'
 import { SiGithub, SiMikrotik, SiUbiquiti, SiPfsense, SiTplink, SiUbuntu } from 'react-icons/si'
 import { FaWindows } from 'react-icons/fa'
 import { JucasoftWordmark } from '../components/JucasoftWordmark'
@@ -17,6 +34,12 @@ const steps = [
   { n: '04', title: 'IP sempre atual', desc: 'Domínio sempre no IP certo', icon: RefreshCw },
   { n: '05', title: 'API documentada', desc: 'Simples e bem documentada', icon: FileCode2 },
 ]
+
+// Quanto tempo cada passo fica em destaque antes de trocar pro próximo — usada
+// tanto pro setInterval quanto pra duração da barrinha de "carregando" no
+// indicador mobile, então as duas coisas ficam sempre no mesmo compasso (se
+// mudar uma, muda a outra).
+const STEP_INTERVAL_MS = 3500
 
 type CompatItem = {
   label: string
@@ -53,24 +76,47 @@ const securityItems = [
   },
 ]
 
+// `final` é o ícone que a linha mostra depois de processada: 'ok' termina em
+// check, 'none' termina em X (caso da linha que não achou mudança nenhuma).
 const contextRows = [
-  'Verificando IP',
-  'Mudança identificada',
-  'Atualizando o IP',
-  'Salvando no histórico',
-  'Verificando IP',
-  'Mudança não identificada',
+  { label: 'Verificando IP', icon: Search, final: 'ok' as const },
+  { label: 'Mudança identificada', icon: Zap, final: 'ok' as const },
+  { label: 'Atualizando o IP', icon: RefreshCw, final: 'ok' as const },
+  { label: 'Salvando no histórico', icon: Save, final: 'ok' as const },
+  { label: 'Verificando IP', icon: Search, final: 'ok' as const },
+  { label: 'Mudança não identificada', icon: XCircle, final: 'none' as const },
 ]
 
-// Altura de cada linha (20px) + gap (9px) — mesma proporção da referência,
-// usada como distância do loop do carrossel abaixo.
+// Duração de uma volta do spinner de carregando (mesmo valor do
+// @keyframes landing-status-spin no LandingPage.css — se mudar um, muda o
+// outro). Usamos ela como "unidade" de tempo pra todo o resto do log ficar no
+// mesmo compasso, em vez de números soltos sem relação entre si.
+const SPIN_DURATION_MS = 900
+// Cada linha fica em foco por exatamente 4 voltas inteiras do spinner — dá
+// tempo de ler o texto e ver o spinner girar por completo antes de concluir,
+// em vez de cortar a rotação no meio (e, com isso, deixa tudo mais lento).
+const ROW_DWELL_MS = SPIN_DURATION_MS * 4
+
+// Altura de cada linha (20px) + gap (9px) — usada só pra calcular a distância
+// que a faixa precisa rolar.
 const ROW_STEP = 29
-const CONTEXT_LOOP_DISTANCE = ROW_STEP * contextRows.length
-// Velocidade fixa (px/s) baseada na proporção original de 3 linhas em 8s —
-// assim, se a quantidade de linhas do "log" mudar de novo, a rolagem continua
-// no mesmo ritmo em vez de acelerar ou desacelerar.
-const CONTEXT_ROW_SPEED = (ROW_STEP * 3) / 8
-const CONTEXT_LOOP_DURATION = CONTEXT_LOOP_DISTANCE / CONTEXT_ROW_SPEED
+// +1 no total: depois da última linha processar, a faixa "descansa" com tudo
+// concluído por uma volta inteira antes de reiniciar o ciclo — sem essa
+// folga, a última linha nunca chegava a mostrar o resultado, pulava direto
+// de carregando pra pendente de novo.
+const CONTEXT_LOOP_DISTANCE = ROW_STEP * (contextRows.length + 1)
+// Duração total = tempo de cada linha × quantidade de "posições" (linhas +
+// o descanso final) — assim a velocidade da rolagem é sempre a consequência
+// do tempo por linha, nunca o contrário.
+const CONTEXT_LOOP_DURATION = (ROW_DWELL_MS / 1000) * (contextRows.length + 1)
+
+// Empurra o conteúdo pra baixo dentro da janelinha, sem mexer no cálculo de
+// `logPos` (isso continua batendo certinho com o tempo). O problema era que,
+// pela matemática original, uma linha só virava "concluída" bem na hora em
+// que ela já tinha rolado pra fora da janela (por cima) — o resultado
+// aparecia depois que já tinha sumido. Com esse respiro de 2 linhas, o
+// check/X aparece enquanto a linha ainda está bem no meio da área visível.
+const CONTEXT_VISUAL_BUFFER = ROW_STEP * 2
 
 /**
  * Linha divisória que "desenha" da esquerda pra direita quando entra na tela.
@@ -124,35 +170,43 @@ function Reveal({ children, className }: { children: ReactNode; className?: stri
 
 export function LandingPage() {
   const [activeStep, setActiveStep] = useState(0)
-  const tabRefs = useRef<(HTMLDivElement | null)[]>([])
 
   useEffect(() => {
     const id = setInterval(() => {
       setActiveStep((i) => (i + 1) % steps.length)
-    }, 3500)
+    }, STEP_INTERVAL_MS)
     return () => clearInterval(id)
   }, [])
 
-  // Em telas estreitas, a seção de passos vira uma faixa com scroll horizontal
-  // (ver .landing-tabs no CSS) — aqui a rolagem acompanha o passo ativo, pra
-  // quem não arrastar manualmente também ver os outros passos passando.
-  //
-  // Importante: mexemos SÓ no scrollLeft do próprio container, nunca com
-  // scrollIntoView. O scrollIntoView, mesmo com block:"nearest", ainda rola a
-  // página verticalmente pra trazer o elemento de volta à tela sempre que ele
-  // está fora da viewport — e como esse efeito roda a cada 3.5s (a cada troca
-  // de passo) independente de onde a pessoa esteja rolando a página, isso
-  // puxava a página de volta pra essa seção mesmo com o usuário lá embaixo no
-  // rodapé. Ajustando só o scrollLeft do carrossel, o scroll vertical da
-  // página nunca é tocado.
+  // Log da seção "COMO FUNCIONA": a faixinha pequena com rolagem contínua de
+  // volta, mas mantendo os 3 estágios sem cor (pendente/carregando/concluído)
+  // e sem mostrar resultado antes da hora. Pra isso, em vez de deixar o
+  // framer-motion animar sozinho via prop `animate`, controlamos a posição
+  // com um motionValue e escutamos cada atualização pra calcular `logPos` —
+  // até qual linha já foi processada nesse ciclo (0 = nenhuma ainda,
+  // contextRows.length = todas). A faixa mostra 2 cópias da lista: a primeira
+  // usa `logPos` pra decidir pendente/carregando/concluído linha a linha; a
+  // segunda (a "próxima volta", que só aparece espiando lá embaixo) fica
+  // sempre pendente, porque ela ainda nem começou.
+  const contextScrollY = useMotionValue(0)
+  const [logPos, setLogPos] = useState(0)
+
   useEffect(() => {
-    const tab = tabRefs.current[activeStep]
-    const container = tab?.parentElement as HTMLElement | null | undefined
-    if (tab && container && container.scrollWidth > container.clientWidth) {
-      const targetLeft = tab.offsetLeft - (container.clientWidth - tab.offsetWidth) / 2
-      container.scrollTo({ left: targetLeft, behavior: 'smooth' })
-    }
-  }, [activeStep])
+    const controls = animateValue(contextScrollY, [0, -CONTEXT_LOOP_DISTANCE], {
+      duration: CONTEXT_LOOP_DURATION,
+      repeat: Infinity,
+      ease: 'linear',
+    })
+    return controls.stop
+  }, [])
+
+  useEffect(() => {
+    return contextScrollY.on('change', (latest) => {
+      const raw = Math.floor((-latest + ROW_STEP) / ROW_STEP)
+      const pos = Math.min(Math.max(raw - 1, 0), contextRows.length)
+      setLogPos((current) => (current === pos ? current : pos))
+    })
+  }, [])
 
   return (
     <div className="landing">
@@ -212,13 +266,7 @@ export function LandingPage() {
           const Icon = step.icon
           const isActive = i === activeStep
           return (
-            <div
-              className={`landing-tab${isActive ? ' is-active' : ''}`}
-              key={step.n}
-              ref={(el) => {
-                tabRefs.current[i] = el
-              }}
-            >
+            <div className={`landing-tab${isActive ? ' is-active' : ''}`} key={step.n}>
               <span className="landing-eyebrow-num">
                 <Icon size={13} />
                 {step.n}
@@ -235,6 +283,52 @@ export function LandingPage() {
             </div>
           )
         })}
+      </section>
+
+      {/* Versão mobile dos mesmos 5 passos: em vez do carrossel horizontal
+          (que dava trabalho pra impedir o usuário de arrastar e ainda
+          precisava de scroll pra ver os 5), aqui é o mesmo cartão do
+          desktop (ícone+número, título, descrição) mostrando só o passo
+          ativo, com fade na troca. Nada aqui rola: não tem o que "corrigir"
+          porque não existe scroll. */}
+      <section className="landing-steps-mobile">
+        <div className="landing-steps-card">
+          <AnimatePresence mode="wait">
+            {(() => {
+              const step = steps[activeStep]
+              const Icon = step.icon
+              return (
+                <motion.div
+                  key={step.n}
+                  className="landing-steps-active"
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.25, ease: 'easeOut' }}
+                >
+                  <span className="landing-eyebrow-num">
+                    <Icon size={13} />
+                    {step.n}
+                  </span>
+                  <strong>{step.title}</strong>
+                  <span className="landing-steps-desc">{step.desc}</span>
+                </motion.div>
+              )
+            })()}
+          </AnimatePresence>
+          {/* Barra fora do AnimatePresence do texto de propósito: ela precisa
+              reiniciar exatamente quando activeStep muda, sem esperar o fade
+              do texto terminar — senão desalinha do STEP_INTERVAL_MS real. */}
+          <span className="landing-steps-active-bar-track">
+            <motion.span
+              key={activeStep}
+              className="landing-steps-active-bar-fill"
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: STEP_INTERVAL_MS / 1000, ease: 'linear' }}
+            />
+          </span>
+        </div>
       </section>
 
       <AnimatedLine edge="box" />
@@ -312,16 +406,31 @@ export function LandingPage() {
         <div className="landing-context-reads" aria-hidden="true">
           <motion.div
             className="landing-context-track"
-            animate={{ y: [0, -CONTEXT_LOOP_DISTANCE] }}
-            transition={{ duration: CONTEXT_LOOP_DURATION, repeat: Infinity, ease: 'linear' }}
+            style={{ y: contextScrollY, paddingTop: CONTEXT_VISUAL_BUFFER }}
           >
-            {[...contextRows, ...contextRows].map((row, i) => (
-              <div className="landing-context-row" key={`${row}-${i}`}>
-                <Terminal size={14} />
-                <span>{row}</span>
-                <ChevronRight size={14} className="landing-context-chevron" />
-              </div>
-            ))}
+            {[0, 1].flatMap((copy) =>
+              contextRows.map((row, i) => {
+                const Icon = row.icon
+                const FinalIcon = row.final === 'none' ? XCircle : CheckCircle2
+                // Cópia 0 é a volta atual (usa logPos pra saber onde já
+                // passou); cópia 1 é a próxima volta espiando lá embaixo —
+                // ainda nem começou, então fica sempre pendente.
+                const stage = copy === 1 ? 'pending' : i < logPos ? 'done' : i === logPos ? 'loading' : 'pending'
+                return (
+                  <div className={`landing-context-row landing-context-row--${stage}`} key={`${copy}-${row.label}-${i}`}>
+                    <Icon size={14} />
+                    <span>{row.label}</span>
+                    <span className="landing-context-status">
+                      {stage === 'pending' && <Circle key="pending" size={12} className="landing-context-status-icon" />}
+                      {stage === 'loading' && (
+                        <Loader2 key="loading" size={12} className="landing-context-status-icon landing-context-status-icon--spin" />
+                      )}
+                      {stage === 'done' && <FinalIcon key="done" size={12} className="landing-context-status-icon" />}
+                    </span>
+                  </div>
+                )
+              })
+            )}
           </motion.div>
         </div>
         <span className="landing-eyebrow">COMO FUNCIONA</span>

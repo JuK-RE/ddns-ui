@@ -266,34 +266,76 @@
   background: var(--cf-orange);
 }
 
-/* Em telas estreitas os 5 passos não cabem numa grade sem espremer o texto
-   (e 5 itens não fecham direito em 2 colunas — sobra 1 sozinho na última
-   linha). Em vez disso a seção vira uma faixa com scroll horizontal e
-   snap: cada card ocupa a maior parte da largura, deixando uma fatia do
-   próximo visível como dica de que dá pra arrastar. O passo ativo também
-   rola sozinho pra dentro da área visível (ver o useEffect de activeStep
-   em LandingPage.tsx), então quem não mexer na tela ainda vê os 5 passarem. */
+/* Versão mobile: nada de carrossel. Os 5 passos não cabem numa grade sem
+   espremer o texto (e não fecham direito em 2 colunas — sobra 1 sozinho na
+   última linha), e a solução anterior — uma faixa com scroll horizontal —
+   exigia truques só pra impedir o usuário de arrastar e ainda assim
+   precisava "andar" sozinha pra mostrar os 5. Aqui não tem overflow nenhum:
+   é o mesmo cartão do desktop (eyebrow com ícone+número, título, descrição),
+   só que mostrando um passo por vez, com uma barrinha fina embaixo que enche
+   como "carregando" — igual ao underline do desktop, só que animado — pra
+   marcar quanto falta pro próximo passo entrar. */
+.landing-steps-mobile {
+  display: none;
+}
+
 @media (max-width: 760px) {
   .landing-tabs {
-    display: flex;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scroll-padding-inline: 20px;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent 100%);
-    mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent 100%);
-  }
-
-  .landing-tabs::-webkit-scrollbar {
     display: none;
   }
 
-  .landing-tab {
-    flex: 0 0 auto;
-    width: 72vw;
-    max-width: 260px;
-    scroll-snap-align: start;
+  .landing-steps-mobile {
+    display: block;
+    background: var(--cf-surface);
+  }
+
+  .landing-steps-card {
+    position: relative;
+    padding: 18px 20px 22px;
+    overflow: hidden;
+  }
+
+  .landing-steps-active {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-height: 58px;
+  }
+
+  .landing-steps-active .landing-eyebrow-num {
+    margin-bottom: 2px;
+  }
+
+  .landing-steps-active strong {
+    font-size: 14.5px;
+    font-weight: 500;
+    color: var(--cf-ink-strong);
+  }
+
+  .landing-steps-desc {
+    font-size: 12.5px;
+    color: var(--cf-ink-dim);
+  }
+
+  /* Barrinha fina embaixo, igual à .landing-tab-underline do desktop, só que
+     em vez de só aparecer ela enche da esquerda pra direita — a duração é a
+     mesma STEP_INTERVAL_MS que troca o passo lá no LandingPage.tsx, então
+     termina de encher bem na hora em que o próximo passo entra. */
+  .landing-steps-active-bar-track {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--cf-line);
+  }
+
+  .landing-steps-active-bar-fill {
+    display: block;
+    height: 100%;
+    width: 100%;
+    transform-origin: left;
+    background: var(--cf-orange);
   }
 }
 
@@ -431,14 +473,25 @@
   gap: 9px;
 }
 
+/* Cada linha passa por 3 estágios só de verdade, sem cor nenhuma marcando a
+   diferença — tudo no mesmo tom de cinza. O que muda é o ícone (bolinha vazia
+   -> spinner girando -> check/X) e um leve reforço de opacidade/peso na linha
+   que está em foco:
+   - pending: ainda não chegou a vez dela, ícone de bolinha vazia.
+   - loading: é a linha atual, mostra o spinner girando.
+   - done: já foi processada nesse ciclo, mostra o ícone final.
+   O resultado (check/X) só aparece depois que a linha realmente passou pelo
+   estágio de carregando — nunca antes. */
 .landing-context-row {
   display: flex;
   align-items: center;
   gap: 9px;
   height: 20px;
   font-size: 12.5px;
-  color: var(--cf-ink-soft);
+  color: var(--cf-ink-dimmest);
   white-space: nowrap;
+  opacity: 0.6;
+  transition: opacity 0.3s ease, color 0.3s ease;
 }
 
 .landing-context-row svg {
@@ -446,9 +499,46 @@
   color: var(--cf-ink-dimmest);
 }
 
-.landing-context-row .landing-context-chevron {
+.landing-context-row--loading,
+.landing-context-row--done {
+  color: var(--cf-ink-soft);
+  opacity: 1;
+}
+
+.landing-context-status {
+  position: relative;
+  width: 12px;
+  height: 12px;
   margin-left: auto;
+  flex-shrink: 0;
+}
+
+.landing-context-status-icon {
   color: var(--cf-ink-dimmest);
+  animation: landing-status-icon-in 0.25s ease;
+}
+
+.landing-context-status-icon--spin {
+  animation:
+    landing-status-icon-in 0.25s ease,
+    landing-status-spin 0.9s linear infinite;
+}
+
+@keyframes landing-status-icon-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes landing-status-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Security */
