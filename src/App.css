@@ -123,19 +123,26 @@
 .versions-form input {
   flex: 1;
   min-width: 140px;
-  padding: 8px 10px;
+  padding: 9px 12px;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 10px;
   background: var(--bg);
   color: var(--text-h);
   font: inherit;
   font-size: 14px;
 }
 
+.versions-form input:focus {
+  outline: none;
+  border-color: var(--accent-border);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+
 .versions-form button {
-  padding: 8px 16px;
+  padding: 9px 18px;
   border: none;
-  border-radius: 6px;
+  border-radius: 999px;
+  font-weight: 500;
   background: var(--accent);
   color: #fff;
   cursor: pointer;
@@ -160,9 +167,9 @@
 }
 
 .versions-list li {
-  padding: 12px;
+  padding: 12px 14px;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 10px;
   display: flex;
   gap: 8px;
   align-items: baseline;
@@ -203,9 +210,9 @@
 }
 
 .sessions-panel-header .danger {
-  padding: 6px 12px;
-  border: 1px solid #cf222e;
-  border-radius: 6px;
+  padding: 6px 14px;
+  border: 1px solid #f1c4c0;
+  border-radius: 999px;
   background: transparent;
   color: #cf222e;
   cursor: pointer;
@@ -228,9 +235,9 @@
 }
 
 .sessions-list li {
-  padding: 12px;
+  padding: 12px 14px;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 10px;
   display: flex;
   gap: 8px;
   align-items: center;
@@ -264,8 +271,8 @@
 }
 
 .session-status--ativa {
-  background: #dafbe1;
-  color: #116329;
+  background: rgba(34, 160, 107, 0.1);
+  color: #17774f;
 }
 
 .session-status--revogada,
@@ -281,9 +288,9 @@
 }
 
 .sessions-list button {
-  padding: 6px 12px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
+  padding: 6px 14px;
+  border: 1px solid var(--cf-line-pill);
+  border-radius: 999px;
   background: var(--bg);
   color: var(--text-h);
   cursor: pointer;

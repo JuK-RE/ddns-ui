@@ -1,11 +1,13 @@
 import { createContext, useContext, useCallback, useEffect, useState, type ReactNode } from 'react'
-import { api, API_URL, setToken, clearToken } from '../lib/api'
+import { api, API_URL, setSessionHint } from '../lib/api'
 import type { User } from '../types'
 
 type AuthContextValue = {
   user: User | null
   loading: boolean
   lastError: string | null
+  /** Erro vindo do retorno do OAuth (?login=error). */
+  loginError: boolean
   refresh: () => Promise<void>
   logout: () => Promise<void>
   loginUrl: string
@@ -14,10 +16,29 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
+// O backend devolve o navegador pra /auth?login=success (ou =error) depois
+// do OAuth — o token já veio num cookie httpOnly, nada vem na URL. Lemos o
+// parâmetro antes do primeiro render (pra já mostrar "carregando" em vez da
+// tela de login) e limpamos a URL.
+function consumeLoginResult(): 'success' | 'error' | null {
+  const params = new URLSearchParams(window.location.search)
+  const result = params.get('login')
+  if (result !== 'success' && result !== 'error') return null
+
+  params.delete('login')
+  const query = params.toString()
+  window.history.replaceState(null, '', window.location.pathname + (query ? `?${query}` : '') + window.location.hash)
+
+  if (result === 'success') setSessionHint(true)
+  return result
+}
+const initialLoginResult = consumeLoginResult()
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [lastError, setLastError] = useState<string | null>(null)
+  const [loginError] = useState(initialLoginResult === 'error')
 
   const refresh = useCallback(async () => {
     setLoading(true)
@@ -25,6 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const { data } = await api.get<{ user: User | null }>('/auth/me')
       setUser(data.user)
+      setSessionHint(Boolean(data.user))
     } catch (err) {
       setUser(null)
       setLastError(err instanceof Error ? err.message : 'Erro ao verificar sessão')
@@ -35,30 +57,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     try {
-      // Precisa ir com o header Authorization ainda presente — é assim
-      // que o backend sabe qual sessão revogar. Por isso chama a API
-      // antes de limpar o token local (na ordem antiga, o token já
-      // tinha sido descartado e o backend não tinha como saber qual
-      // sessão revogar).
-      await api.get('/auth/logout')
+      // POST: o backend revoga a sessão e apaga o cookie httpOnly (o JS não
+      // consegue apagar esse cookie sozinho).
+      await api.post('/auth/logout')
     } catch {
-      // não crítico — mesmo falhando, ainda descartamos o token local abaixo
+      // não crítico — a UI sai do modo logado de qualquer forma
     } finally {
-      clearToken()
+      setSessionHint(false)
       setUser(null)
     }
   }, [])
 
   useEffect(() => {
-    // O redirect do GitHub volta com "#token=..." na URL. Extrai, salva
-    // e limpa a URL antes de fazer qualquer outra coisa.
-    const hash = window.location.hash
-    if (hash.startsWith('#token=')) {
-      const token = decodeURIComponent(hash.slice('#token='.length))
-      setToken(token)
-      window.history.replaceState(null, '', window.location.pathname + window.location.search)
-    }
-
     refresh()
   }, [refresh])
 
@@ -68,10 +78,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         loading,
         lastError,
+        loginError,
         refresh,
         logout,
-        loginUrl: `${API_URL ?? ''}/auth/github`,
-        loginUrlGoogle: `${API_URL ?? ''}/auth/google`,
+        loginUrl: `${API_URL}/auth/github`,
+        loginUrlGoogle: `${API_URL}/auth/google`,
       }}
     >
       {children}

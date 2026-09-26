@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { api, getCurrentSessionId } from '../lib/api'
+import { api } from '../lib/api'
 import { useAuth } from '../auth/AuthContext'
 import type { Session } from '../types'
 
@@ -13,13 +13,12 @@ function statusOf(session: Session): 'ativa' | 'revogada' | 'expirada' {
 // remotamente" qualquer uma delas — revoga no backend (DELETE
 // /auth/sessions/:id), que é o que de fato invalida aquele token antes
 // de expirar (ver services/session.ts na API).
-export function SessionsPanel() {
+export function SessionsPanel({ showTitle = true }: { showTitle?: boolean }) {
   const { user, logout } = useAuth()
   const [sessions, setSessions] = useState<Session[]>([])
   const [error, setError] = useState<string | null>(null)
   const [revokingId, setRevokingId] = useState<string | null>(null)
   const [revokingAll, setRevokingAll] = useState(false)
-  const currentSessionId = getCurrentSessionId()
 
   const load = useCallback(async () => {
     if (!user) return
@@ -42,9 +41,9 @@ export function SessionsPanel() {
     try {
       await api.delete(`/auth/sessions/${session.id}`)
 
-      if (session.id === currentSessionId) {
-        // Era a sessão deste próprio dispositivo — desloga localmente
-        // também, já que o token guardado não serve mais.
+      if (session.current) {
+        // Era a sessão deste próprio navegador — o backend já apagou o
+        // cookie; aqui só sai do modo logado na UI.
         await logout()
       }
 
@@ -82,7 +81,7 @@ export function SessionsPanel() {
   return (
     <section className="sessions-panel">
       <div className="sessions-panel-header">
-        <h2>Sessões</h2>
+        {showTitle ? <h2>Sessões</h2> : <span />}
         {hasActiveSession && (
           <button type="button" className="danger" onClick={() => void handleRevokeAll()} disabled={revokingAll}>
             {revokingAll ? 'Desconectando…' : 'Desconectar todos os dispositivos'}
@@ -96,7 +95,7 @@ export function SessionsPanel() {
         {sessions.length === 0 && <li className="empty">Nenhuma sessão encontrada.</li>}
         {sessions.map((session) => {
           const status = statusOf(session)
-          const isCurrent = session.id === currentSessionId
+          const isCurrent = Boolean(session.current)
 
           return (
             <li key={session.id}>

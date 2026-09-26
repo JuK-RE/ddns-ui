@@ -1,15 +1,10 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { Link } from 'react-router-dom'
-import { motion, AnimatePresence, useInView, useMotionValue, animate as animateValue } from 'framer-motion'
+import { useEffect, useState, type ReactNode } from 'react'
+import { motion, AnimatePresence, useMotionValue, animate as animateValue } from 'framer-motion'
 import {
   Router,
   Terminal,
   RefreshCw,
   FileCode2,
-  Lock,
-  ShieldCheck,
-  ScrollText,
-  ArrowRight,
   Globe,
   Search,
   Zap,
@@ -21,11 +16,11 @@ import {
 } from 'lucide-react'
 import { SiGithub, SiMikrotik, SiUbiquiti, SiPfsense, SiTplink, SiUbuntu } from 'react-icons/si'
 import { FaWindows } from 'react-icons/fa'
-import { JucasoftWordmark } from '../components/JucasoftWordmark'
-import { JukWordmark } from '../components/JukWordmark'
+import { useAuth } from '../auth/AuthContext'
+import { AnimatedLine, BrandLockup, ButtonLink, Eyebrow, REPO_URL, SiteFooter, SiteNav } from '../ui'
+import { FaqSection } from './landing/FaqSection'
+import { usePageMeta } from '../seo/usePageMeta'
 import './LandingPage.css'
-
-const REPO_URL = 'https://github.com/JuK-RE/'
 
 const steps = [
   { n: '01', title: 'Open source', desc: 'Código aberto no GitHub', icon: SiGithub },
@@ -45,35 +40,29 @@ type CompatItem = {
   label: string
   badge?: typeof SiMikrotik
   plus?: string
+  /** Cor oficial da marca. Sem cor, usa a tinta escura do site. */
+  color?: string
 }
 
+// Logos soltas (sem o quadradinho) na cor oficial de cada marca.
 const compatList: CompatItem[] = [
-  { badge: SiMikrotik, label: 'MikroTik' },
-  { badge: SiUbiquiti, label: 'UniFi' },
-  { badge: SiPfsense, label: 'pfSense' },
-  { badge: SiTplink, label: 'TP-Link' },
-  { badge: FaWindows, label: 'Windows Server' },
-  { badge: SiUbuntu, label: 'Ubuntu' },
+  { badge: SiMikrotik, label: 'MikroTik', color: '#293239' },
+  { badge: SiUbiquiti, label: 'UniFi', color: '#0559C9' },
+  { badge: SiPfsense, label: 'pfSense', color: '#212121' },
+  { badge: SiTplink, label: 'TP-Link', color: '#4ACBD6' },
+  { badge: FaWindows, label: 'Windows Server', color: '#0078D4' },
+  { badge: SiUbuntu, label: 'Ubuntu', color: '#E95420' },
   { badge: Globe, label: 'APIs (HTTP puro)' },
   { plus: '+5', label: 'Outras integrações' },
 ]
 
-const securityItems = [
-  {
-    icon: Lock,
-    title: 'Login sem senha',
-    desc: 'Todo acesso passa por OAuth (GitHub ou Google). O ddns-api nunca guarda credenciais próprias.',
-  },
-  {
-    icon: ShieldCheck,
-    title: 'Sessões revogáveis',
-    desc: 'Cada dispositivo aparece na lista de sessões e pode ser desconectado remotamente a qualquer momento.',
-  },
-  {
-    icon: ScrollText,
-    title: 'Histórico auditável',
-    desc: 'Toda versão registrada fica salva com data e descrição, direto no banco D1.',
-  },
+const compatLinks = [
+  { label: 'MikroTik', href: 'https://mikrotik.com/' },
+  { label: 'UniFi', href: 'https://www.ui.com/' },
+  { label: 'pfSense', href: 'https://www.pfsense.org/' },
+  { label: 'TP-Link', href: 'https://www.tp-link.com/' },
+  { label: 'Windows Server', href: 'https://www.microsoft.com/en-us/windows-server' },
+  { label: 'Ubuntu', href: 'https://ubuntu.com/' },
 ]
 
 // `final` é o ícone que a linha mostra depois de processada: 'ok' termina em
@@ -89,70 +78,28 @@ const contextRows = [
 
 // Duração de uma volta do spinner de carregando (mesmo valor do
 // @keyframes landing-status-spin no LandingPage.css — se mudar um, muda o
-// outro). Usamos ela como "unidade" de tempo pra todo o resto do log ficar no
-// mesmo compasso, em vez de números soltos sem relação entre si.
+// outro). É a "unidade" de tempo pra todo o resto do log ficar no mesmo
+// compasso.
 const SPIN_DURATION_MS = 900
-// Cada linha fica em foco por exatamente 4 voltas inteiras do spinner — dá
-// tempo de ler o texto e ver o spinner girar por completo antes de concluir,
-// em vez de cortar a rotação no meio (e, com isso, deixa tudo mais lento).
+// Cada linha fica em foco por exatamente 4 voltas inteiras do spinner.
 const ROW_DWELL_MS = SPIN_DURATION_MS * 4
 
-// Altura de cada linha (20px) + gap (9px) — usada só pra calcular a distância
+// Altura de cada linha (20px) + gap (9px) — usada pra calcular a distância
 // que a faixa precisa rolar.
 const ROW_STEP = 29
 // +1 no total: depois da última linha processar, a faixa "descansa" com tudo
 // concluído por uma volta inteira antes de reiniciar o ciclo — sem essa
-// folga, a última linha nunca chegava a mostrar o resultado, pulava direto
-// de carregando pra pendente de novo.
+// folga, a última linha nunca chegava a mostrar o resultado.
 const CONTEXT_LOOP_DISTANCE = ROW_STEP * (contextRows.length + 1)
 // Duração total = tempo de cada linha × quantidade de "posições" (linhas +
-// o descanso final) — assim a velocidade da rolagem é sempre a consequência
-// do tempo por linha, nunca o contrário.
+// o descanso final) — a velocidade da rolagem é consequência do tempo por
+// linha, nunca o contrário.
 const CONTEXT_LOOP_DURATION = (ROW_DWELL_MS / 1000) * (contextRows.length + 1)
 
-// Empurra o conteúdo pra baixo dentro da janelinha, sem mexer no cálculo de
-// `logPos` (isso continua batendo certinho com o tempo). O problema era que,
-// pela matemática original, uma linha só virava "concluída" bem na hora em
-// que ela já tinha rolado pra fora da janela (por cima) — o resultado
-// aparecia depois que já tinha sumido. Com esse respiro de 2 linhas, o
-// check/X aparece enquanto a linha ainda está bem no meio da área visível.
+// Empurra o conteúdo pra baixo dentro da janelinha (2 linhas de respiro), pra
+// que o check/X apareça enquanto a linha ainda está no meio da área visível
+// — sem isso o resultado só surgia depois que a linha já tinha saído por cima.
 const CONTEXT_VISUAL_BUFFER = ROW_STEP * 2
-
-/**
- * Linha divisória que "desenha" da esquerda pra direita quando entra na tela.
- *
- * - `dashed`: linha sólida ("_______") ou tracejada ("- - - - -").
- * - `edge`: até onde a linha se estende — `"box"` fica dentro do container de
- *   1126px (mesma largura do conteúdo); `"page"` estoura até a borda real da
- *   janela, de ponta a ponta.
- *
- * A visibilidade é rastreada num wrapper que fica na posição normal do fluxo
- * do documento (`landing-line-wrap`), nunca no elemento que efetivamente
- * "estoura" a largura da tela. Isso importa porque `edge="page"` desloca o
- * elemento pra uma posição X negativa (ver .landing-line--page) — se o
- * IntersectionObserver observasse esse elemento diretamente, o ponto de
- * referência do clip-path ficaria sempre fora da viewport e a animação nunca
- * dispararia, em nenhuma posição de scroll.
- */
-function AnimatedLine({ dashed = false, edge = 'box' }: { dashed?: boolean; edge?: 'box' | 'page' }) {
-  const wrapRef = useRef<HTMLDivElement>(null)
-  const inView = useInView(wrapRef, { once: true, amount: 0 })
-
-  const classes = ['landing-line']
-  if (dashed) classes.push('landing-line--dashed')
-  if (edge === 'page') classes.push('landing-line--page')
-
-  return (
-    <div ref={wrapRef} className="landing-line-wrap">
-      <motion.div
-        className={classes.join(' ')}
-        initial={{ clipPath: 'inset(0 100% 0 0)' }}
-        animate={inView ? { clipPath: 'inset(0 0% 0 0)' } : undefined}
-        transition={{ duration: 0.8, ease: 'easeInOut' }}
-      />
-    </div>
-  )
-}
 
 function Reveal({ children, className }: { children: ReactNode; className?: string }) {
   return (
@@ -168,8 +115,20 @@ function Reveal({ children, className }: { children: ReactNode; className?: stri
   )
 }
 
+const fadeUp = (delay: number) => ({
+  initial: { opacity: 0, y: 16 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5, delay },
+})
+
 export function LandingPage() {
   const [activeStep, setActiveStep] = useState(0)
+  // Logado: o painel mora no "/" (a LP fica em /home). Visitante: vai pro login.
+  const { user } = useAuth()
+  const panelHref = user ? '/' : '/auth'
+  const panelLabel = user ? 'Ir para o painel' : 'Acessar painel'
+  // "/" e "/home" mostram a mesma landing: a canônica é sempre "/".
+  usePageMeta({ path: '/' })
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -178,16 +137,12 @@ export function LandingPage() {
     return () => clearInterval(id)
   }, [])
 
-  // Log da seção "COMO FUNCIONA": a faixinha pequena com rolagem contínua de
-  // volta, mas mantendo os 3 estágios sem cor (pendente/carregando/concluído)
-  // e sem mostrar resultado antes da hora. Pra isso, em vez de deixar o
-  // framer-motion animar sozinho via prop `animate`, controlamos a posição
-  // com um motionValue e escutamos cada atualização pra calcular `logPos` —
-  // até qual linha já foi processada nesse ciclo (0 = nenhuma ainda,
-  // contextRows.length = todas). A faixa mostra 2 cópias da lista: a primeira
-  // usa `logPos` pra decidir pendente/carregando/concluído linha a linha; a
-  // segunda (a "próxima volta", que só aparece espiando lá embaixo) fica
-  // sempre pendente, porque ela ainda nem começou.
+  // Log da seção "COMO FUNCIONA": faixinha com rolagem contínua, mantendo os
+  // 3 estágios (pendente/carregando/concluído) sem mostrar resultado antes da
+  // hora. A posição é um motionValue; cada atualização calcula `logPos` — até
+  // qual linha já foi processada nesse ciclo. A faixa mostra 2 cópias da
+  // lista: a primeira usa `logPos`; a segunda (a "próxima volta", espiando lá
+  // embaixo) fica sempre pendente.
   const contextScrollY = useMotionValue(0)
   const [logPos, setLogPos] = useState(0)
 
@@ -198,7 +153,7 @@ export function LandingPage() {
       ease: 'linear',
     })
     return controls.stop
-  }, [])
+  }, [contextScrollY])
 
   useEffect(() => {
     return contextScrollY.on('change', (latest) => {
@@ -206,57 +161,43 @@ export function LandingPage() {
       const pos = Math.min(Math.max(raw - 1, 0), contextRows.length)
       setLogPos((current) => (current === pos ? current : pos))
     })
-  }, [])
+  }, [contextScrollY])
 
   return (
     <div className="landing">
-      <nav className="landing-nav">
-        <JucasoftWordmark className="landing-brand-logo" height={22} />
-        <Link to="/auth" className="landing-pill">
-          Acessar painel
-        </Link>
-      </nav>
+      <SiteNav>
+        <ButtonLink variant="ghost" size="sm" href={REPO_URL} external className="landing-nav-github">
+          <SiGithub size={14} />
+          GitHub
+        </ButtonLink>
+        <ButtonLink to={panelHref} size="sm">
+          {panelLabel}
+        </ButtonLink>
+      </SiteNav>
 
       <AnimatedLine dashed edge="page" />
 
       <header className="landing-hero">
-        <motion.div
-          className="landing-hero-badge"
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <JukWordmark height={13} />
-          <span className="landing-hero-badge-divider" aria-hidden="true" />
-          <span>DDNS</span>
+        <motion.div {...fadeUp(0)} className="landing-hero-lockup">
+          <BrandLockup />
         </motion.div>
-        <motion.h1 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.06 }}>
+        <motion.h1 {...fadeUp(0.06)}>
           Seu próprio DDNS,
           <br />
           sob seu controle.
         </motion.h1>
-        <motion.p
-          className="landing-lede"
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.14 }}
-        >
+        <motion.p className="landing-lede" {...fadeUp(0.14)}>
           Um Dynamic DNS moderno, transparente e open source para manter sua rede sempre acessível.
         </motion.p>
-        <motion.a
-          className="landing-outline-button"
-          href={REPO_URL}
-          target="_blank"
-          rel="noreferrer"
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.22 }}
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
-        >
-          <SiGithub size={15} />
-          Ver no GitHub
-        </motion.a>
+        <motion.div className="landing-hero-actions" {...fadeUp(0.22)}>
+          <ButtonLink to={panelHref} size="lg">
+            {panelLabel}
+          </ButtonLink>
+          <ButtonLink variant="outline" size="lg" href={REPO_URL} external>
+            <SiGithub size={15} />
+            Ver no GitHub
+          </ButtonLink>
+        </motion.div>
       </header>
 
       <AnimatedLine dashed edge="page" />
@@ -285,12 +226,9 @@ export function LandingPage() {
         })}
       </section>
 
-      {/* Versão mobile dos mesmos 5 passos: em vez do carrossel horizontal
-          (que dava trabalho pra impedir o usuário de arrastar e ainda
-          precisava de scroll pra ver os 5), aqui é o mesmo cartão do
-          desktop (ícone+número, título, descrição) mostrando só o passo
-          ativo, com fade na troca. Nada aqui rola: não tem o que "corrigir"
-          porque não existe scroll. */}
+      {/* Versão mobile dos 5 passos: mesmo cartão do desktop mostrando só o
+          passo ativo, com fade na troca e uma barrinha que enche até o
+          próximo. Sem carrossel, sem scroll. */}
       <section className="landing-steps-mobile">
         <div className="landing-steps-card">
           <AnimatePresence mode="wait">
@@ -316,9 +254,8 @@ export function LandingPage() {
               )
             })()}
           </AnimatePresence>
-          {/* Barra fora do AnimatePresence do texto de propósito: ela precisa
-              reiniciar exatamente quando activeStep muda, sem esperar o fade
-              do texto terminar — senão desalinha do STEP_INTERVAL_MS real. */}
+          {/* Barra fora do AnimatePresence de propósito: precisa reiniciar
+              exatamente quando activeStep muda, sem esperar o fade. */}
           <span className="landing-steps-active-bar-track">
             <motion.span
               key={activeStep}
@@ -335,38 +272,18 @@ export function LandingPage() {
 
       <Reveal className="landing-split">
         <div className="landing-split-text">
-          <span className="landing-eyebrow">COMPATIBILIDADE</span>
+          <Eyebrow>Compatibilidade</Eyebrow>
           <h2>Conecte do seu jeito. Funciona onde você precisa.</h2>
           <p>
             Configure direto no roteador, use nossa API HTTP ou o client oficial: compatível com{' '}
-            <a className="landing-inline-link" href="https://mikrotik.com/" target="_blank" rel="noreferrer">
-              MikroTik
-            </a>
-            ,{' '}
-            <a className="landing-inline-link" href="https://www.ui.com/" target="_blank" rel="noreferrer">
-              UniFi
-            </a>
-            ,{' '}
-            <a className="landing-inline-link" href="https://www.pfsense.org/" target="_blank" rel="noreferrer">
-              pfSense
-            </a>
-            ,{' '}
-            <a className="landing-inline-link" href="https://www.tp-link.com/" target="_blank" rel="noreferrer">
-              TP-Link
-            </a>
-            ,{' '}
-            <a
-              className="landing-inline-link"
-              href="https://www.microsoft.com/en-us/windows-server"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Windows Server
-            </a>
-            ,{' '}
-            <a className="landing-inline-link" href="https://ubuntu.com/" target="_blank" rel="noreferrer">
-              Ubuntu
-            </a>{' '}
+            {compatLinks.map((link, i) => (
+              <span key={link.label}>
+                <a className="landing-inline-link" href={link.href} target="_blank" rel="noreferrer">
+                  {link.label}
+                </a>
+                {i < compatLinks.length - 1 ? ', ' : ''}
+              </span>
+            ))}{' '}
             e muito mais.
           </p>
           <p>
@@ -385,13 +302,13 @@ export function LandingPage() {
             Ver código-fonte no GitHub
           </a>
         </div>
-        <div className="landing-grid landing-grid--compat">
+        <div className="landing-grid">
           {compatList.map((item) => {
             const Badge = item.badge
             return (
               <div className="landing-grid-cell" key={item.label}>
-                <span className="landing-grid-badge">
-                  {Badge ? <Badge size={18} /> : <span className="landing-grid-plus">{item.plus}</span>}
+                <span className="landing-grid-logo" style={item.color ? { color: item.color } : undefined}>
+                  {Badge ? <Badge size={30} /> : <span className="landing-grid-plus">{item.plus}</span>}
                 </span>
                 <span>{item.label}</span>
               </div>
@@ -404,17 +321,13 @@ export function LandingPage() {
 
       <Reveal className="landing-context">
         <div className="landing-context-reads" aria-hidden="true">
-          <motion.div
-            className="landing-context-track"
-            style={{ y: contextScrollY, paddingTop: CONTEXT_VISUAL_BUFFER }}
-          >
+          <motion.div className="landing-context-track" style={{ y: contextScrollY, paddingTop: CONTEXT_VISUAL_BUFFER }}>
             {[0, 1].flatMap((copy) =>
               contextRows.map((row, i) => {
                 const Icon = row.icon
                 const FinalIcon = row.final === 'none' ? XCircle : CheckCircle2
-                // Cópia 0 é a volta atual (usa logPos pra saber onde já
-                // passou); cópia 1 é a próxima volta espiando lá embaixo —
-                // ainda nem começou, então fica sempre pendente.
+                // Cópia 0 é a volta atual (usa logPos); cópia 1 é a próxima
+                // volta espiando lá embaixo — sempre pendente.
                 const stage = copy === 1 ? 'pending' : i < logPos ? 'done' : i === logPos ? 'loading' : 'pending'
                 return (
                   <div className={`landing-context-row landing-context-row--${stage}`} key={`${copy}-${row.label}-${i}`}>
@@ -429,74 +342,37 @@ export function LandingPage() {
                     </span>
                   </div>
                 )
-              })
+              }),
             )}
           </motion.div>
         </div>
-        <span className="landing-eyebrow">COMO FUNCIONA</span>
-        <h2>Cada atualização de IP, registrada.</h2>
+        <Eyebrow>Como funciona</Eyebrow>
+        <h2>Seu IP mudou? Seu domínio acompanha.</h2>
         <p>
-          Toda chamada autenticada gera uma sessão rastreável, e cada nova versão do sistema fica registrada com
-          descrição — dá pra saber exatamente o que mudou e quando.
+          De tempos em tempos, o nosso app ou o seu roteador confere qual é o seu IP. Se ele mudou, o seu domínio é
+          atualizado na hora.
         </p>
       </Reveal>
 
       <AnimatedLine edge="box" />
 
-      <Reveal className="landing-security">
-        <div className="landing-security-text">
-          <span className="landing-eyebrow">SEGURANÇA</span>
-          <h2>
-            Sessões isoladas.
-            <br />
-            Tokens revogáveis.
-          </h2>
-          <p>
-            Cada login gera um token JWT vinculado a uma sessão própria. Nenhuma senha é armazenada — a
-            autenticação é sempre delegada ao GitHub ou Google.
-          </p>
-          <p>Chaves de API e segredos ficam nas variáveis de ambiente da Cloudflare Worker, nunca no repositório.</p>
-        </div>
-        <ol className="landing-security-list">
-          {securityItems.map((item) => {
-            const Icon = item.icon
-            return (
-              <li key={item.title}>
-                <span className="landing-security-icon">
-                  <Icon size={17} />
-                </span>
-                <div>
-                  <h3>{item.title}</h3>
-                  <p>{item.desc}</p>
-                </div>
-              </li>
-            )
-          })}
-        </ol>
-      </Reveal>
+      <FaqSection />
 
       <AnimatedLine edge="box" />
 
       <Reveal className="landing-cta">
-        <span className="landing-eyebrow">COMECE AGORA</span>
+        <Eyebrow>Comece agora</Eyebrow>
         <h2>Configure seu próprio DDNS em minutos.</h2>
         <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-          <Link to="/auth" className="landing-pill landing-pill--large">
-            Acessar painel
-            <ArrowRight size={16} />
-          </Link>
+          <ButtonLink to={panelHref} size="lg">
+            {panelLabel}
+          </ButtonLink>
         </motion.div>
       </Reveal>
 
       <AnimatedLine edge="box" />
 
-      <footer className="landing-footer">
-        <span>© 2026 JUK.re DDNS</span>
-        <a href={REPO_URL} target="_blank" rel="noreferrer">
-          <SiGithub size={14} />
-          GitHub
-        </a>
-      </footer>
+      <SiteFooter />
     </div>
   )
 }
