@@ -1,0 +1,151 @@
+/* Login: mesma moldura da landing (o #root de 1126px com bordas),
+   card centralizado no meio. */
+
+.auth-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+  text-align: left;
+  font-family: var(--cf-sans);
+  color: var(--cf-ink);
+}
+
+.auth-main {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  padding: 56px 20px;
+  /* pontinhos bem sutis ao fundo, como na referência */
+  background-image: radial-gradient(circle, #e6e6e6 1px, transparent 1.2px);
+  background-size: 28px 28px;
+  background-position: center;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+  box-sizing: border-box;
+  padding: 40px 40px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: var(--cf-surface);
+  border: 1px solid var(--cf-line);
+  border-radius: 16px;
+  box-shadow: var(--cf-shadow);
+}
+
+.auth-card h1 {
+  font-size: 26px;
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  color: var(--cf-ink-strong);
+  margin: 28px 0 6px;
+}
+
+.auth-lede {
+  font-size: 14.5px;
+  color: var(--cf-ink-muted);
+  margin: 0 0 28px;
+}
+
+.auth-providers {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.auth-providers .ui-btn {
+  padding-block: 12px;
+  font-size: 14.5px;
+}
+
+.auth-error {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fff1f0;
+  border: 1px solid #ffd2cf;
+  color: #b42318;
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: left;
+}
+
+.auth-divider {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 26px 0 14px;
+  font-family: var(--cf-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cf-ink-dim);
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--cf-line);
+}
+
+.auth-note {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--cf-ink-soft);
+  margin: 0;
+}
+
+/* Celular: sem "card flutuando" — o conteúdo ocupa a tela direto, alinhado
+   ao topo, com botões maiores pro toque. */
+@media (max-width: 560px) {
+  .auth-main {
+    place-items: start stretch;
+    padding: 40px 20px 48px;
+    background-image: none;
+  }
+
+  .auth-card {
+    max-width: none;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+  }
+
+  .auth-card h1 {
+    font-size: 28px;
+    margin-top: 32px;
+  }
+
+  .auth-lede {
+    margin-bottom: 32px;
+  }
+
+  .auth-providers {
+    gap: 12px;
+  }
+
+  .auth-providers .ui-btn {
+    min-height: 52px;
+    font-size: 15px;
+  }
+
+  .auth-divider {
+    margin-top: 32px;
+  }
+
+  .auth-note {
+    max-width: 340px;
+  }
+}

@@ -1,72 +1,44 @@
 import axios from 'axios'
 
-// Sempre absoluta — usada também pro link de login (navegação de
-// verdade, não passa pelo axios).
-export const API_URL = import.meta.env.VITE_API_URL as string | undefined
+// O front só fala com o próprio domínio: tudo vai pra "/api/...", e quem
+// repassa pro backend é o proxy (Vite no dev, a hospedagem em produção —
+// ver README). Assim o endereço real da API não aparece no site, e o
+// cookie de sessão fica no mesmo domínio do front (sem cookie cross-site).
+//
+// Fixo em "/api" de propósito: nenhum endereço de backend entra no bundle.
+// (O VITE_API_URL antigo, se ainda estiver no .env, só é usado pelo
+// vite.config.ts como alvo do proxy — nunca chega aqui.)
+export const API_URL = '/api'
 
-if (!API_URL) {
-  // eslint-disable-next-line no-console
-  console.error('VITE_API_URL não definida. Confira o .env do ddns-ui.')
-}
+// Sessão: cookie httpOnly setado pelo backend. O JavaScript nunca lê nem
+// guarda o token — `withCredentials` só garante que o cookie vá junto.
+export const api = axios.create({ baseURL: API_URL, withCredentials: true })
 
-const TOKEN_KEY = 'ddns_token'
+// Dica (não sensível) de que existe uma sessão aberta neste navegador. Serve
+// só pra UI: mostrar "carregando" em vez de piscar a landing enquanto o
+// /auth/me responde. Quem decide se está logado é sempre o backend.
+const SESSION_HINT_KEY = 'ddns_has_session'
 
-export function getToken(): string | null {
+export function hasSessionHint(): boolean {
   try {
-    return localStorage.getItem(TOKEN_KEY)
+    return localStorage.getItem(SESSION_HINT_KEY) === '1'
   } catch {
-    return null
+    return false
   }
 }
 
-export function hasStoredToken(): boolean {
-  return !!getToken()
-}
-
-export function setToken(token: string) {
+export function setSessionHint(active: boolean) {
   try {
-    localStorage.setItem(TOKEN_KEY, token)
+    if (active) localStorage.setItem(SESSION_HINT_KEY, '1')
+    else localStorage.removeItem(SESSION_HINT_KEY)
   } catch {
-    // localStorage pode falhar (modo privado, quota etc.) — a sessão
-    // simplesmente não persiste entre reloads nesse caso.
-  }
-  api.defaults.headers.common.Authorization = `Bearer ${token}`
-}
-
-// Extrai o `jti` do token guardado, só decodificando o payload do JWT
-// (sem checar assinatura — é só front, a validação de verdade é sempre
-// no backend). Usado pra destacar "este dispositivo" na lista de sessões
-// em GET /auth/sessions.
-export function getCurrentSessionId(): string | null {
-  const token = getToken()
-  if (!token) return null
-
-  try {
-    const payloadB64Url = token.split('.')[1]
-    const payloadB64 = payloadB64Url.replace(/-/g, '+').replace(/_/g, '/')
-    const payload = JSON.parse(atob(payloadB64)) as { jti?: string }
-    return payload.jti ?? null
-  } catch {
-    return null
+    // sem storage (modo privado etc.) — só perde o "carregando"
   }
 }
 
-export function clearToken() {
-  try {
-    localStorage.removeItem(TOKEN_KEY)
-  } catch {
-    // ver comentário em setToken
-  }
-  delete api.defaults.headers.common.Authorization
-}
-
-// Sessão via token Bearer, não cookie — front e API podem estar em
-// domínios totalmente diferentes sem nenhum problema de SameSite/CORS
-// credentials.
-export const api = axios.create({ baseURL: API_URL })
-
-// Se já tinha um token salvo de uma sessão anterior, aplica de cara.
-const existingToken = getToken()
-if (existingToken) {
-  api.defaults.headers.common.Authorization = `Bearer ${existingToken}`
+// Limpa o token que versões antigas do front guardavam no localStorage.
+try {
+  localStorage.removeItem('ddns_token')
+} catch {
+  // ignora
 }

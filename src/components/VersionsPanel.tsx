@@ -9,7 +9,7 @@ type Version = {
   created_at: string
 }
 
-export function VersionsPanel() {
+export function VersionsPanel({ showTitle = true }: { showTitle?: boolean }) {
   const { user } = useAuth()
   const [versions, setVersions] = useState<Version[]>([])
   const [version, setVersion] = useState('')
@@ -42,7 +42,7 @@ export function VersionsPanel() {
 
   return (
     <section className="versions-panel">
-      <h2>Versões do sistema</h2>
+      {showTitle && <h2>Versões do sistema</h2>}
 
       {user && (
         <form onSubmit={handleSubmit} className="versions-form">

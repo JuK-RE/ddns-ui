@@ -13,4 +13,6 @@ export type Session = {
   created_at: string
   expires_at: string
   revoked_at: string | null
+  /** true = sessão deste navegador ("este dispositivo"). */
+  current?: boolean
 }

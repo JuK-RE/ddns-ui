@@ -1,19 +1,109 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- SEO: valores fixos de propósito. Robôs que não executam JavaScript
+         (WhatsApp, LinkedIn, X, Slack…) só enxergam este HTML, então tudo
+         que importa pra busca e compartilhamento já sai pronto aqui.
+         Título/descrição precisam bater com src/seo/site.ts (o build avisa
+         se divergirem). Cada rota ajusta o título via usePageMeta. -->
+    <title>JUK.re DDNS · Dynamic DNS open source</title>
+    <meta
+      name="description"
+      content="Tenha um endereço fixo pra sua rede mesmo com IP dinâmico. DDNS open source e simples de configurar, com suporte a MikroTik, UniFi, pfSense e mais."
+    />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://ddns.juk.re/" />
+    <meta name="theme-color" content="#ff5e1f" />
+    <meta name="author" content="JUCA Soft" />
+
+    <!-- Ícones -->
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- Compartilhamento (Open Graph / X) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="JUK.re DDNS" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:url" content="https://ddns.juk.re/" />
+    <meta property="og:title" content="JUK.re DDNS · Dynamic DNS open source" />
+    <meta
+      property="og:description"
+      content="Tenha um endereço fixo pra sua rede mesmo com IP dinâmico. DDNS open source e simples de configurar, com suporte a MikroTik, UniFi, pfSense e mais."
+    />
+    <meta property="og:image" content="https://ddns.juk.re/og-image.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="JUK.re DDNS: seu próprio DDNS, sob seu controle." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="JUK.re DDNS · Dynamic DNS open source" />
+    <meta
+      name="twitter:description"
+      content="Tenha um endereço fixo pra sua rede mesmo com IP dinâmico. DDNS open source e simples de configurar, com suporte a MikroTik, UniFi, pfSense e mais."
+    />
+    <meta name="twitter:image" content="https://ddns.juk.re/og-image.png" />
+
+    <!-- Dados estruturados (schema.org) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://ddns.juk.re/#website",
+            "url": "https://ddns.juk.re/",
+            "name": "JUK.re DDNS",
+            "inLanguage": "pt-BR",
+            "publisher": { "@id": "https://ddns.juk.re/#org" }
+          },
+          {
+            "@type": "Organization",
+            "@id": "https://ddns.juk.re/#org",
+            "name": "JUCA Soft",
+            "url": "https://www.jucasoft.com.br/",
+            "logo": "https://ddns.juk.re/icon-512.png",
+            "sameAs": ["https://github.com/JuK-RE"]
+          },
+          {
+            "@type": "SoftwareApplication",
+            "name": "JUK.re DDNS",
+            "url": "https://ddns.juk.re/",
+            "description": "Tenha um endereço fixo pra sua rede mesmo com IP dinâmico. DDNS open source e simples de configurar, com suporte a MikroTik, UniFi, pfSense e mais.",
+            "image": "https://ddns.juk.re/og-image.png",
+            "applicationCategory": "UtilitiesApplication",
+            "operatingSystem": "Windows, Linux, macOS, RouterOS",
+            "isAccessibleForFree": true,
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "BRL" },
+            "codeRepository": "https://github.com/JuK-RE/ddns",
+            "publisher": { "@id": "https://ddns.juk.re/#org" }
+          }
+        ]
+      }
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
-    <title>ddns-ui</title>
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <h1>JUK.re DDNS</h1>
+      <p>
+        Tenha um endereço fixo pra sua rede mesmo com IP dinâmico. DDNS open source e simples de configurar, com
+        suporte a MikroTik, UniFi, pfSense e mais.
+      </p>
+      <p>Ative o JavaScript para usar o painel.</p>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
