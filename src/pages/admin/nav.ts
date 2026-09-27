@@ -12,7 +12,7 @@ export type NavItem = {
 
 export const navItems: NavItem[] = [
   { to: '/', label: 'Visão geral', icon: LayoutDashboard, keywords: 'dashboard inicio home painel' },
-  { to: '/hosts', label: 'Hosts', icon: Globe, keywords: 'dominios dns registros ip', badge: 'Em breve', disabled: true },
+  { to: '/hosts', label: 'Hosts', icon: Globe, keywords: 'dominios dns registros ip' },
   { to: '/sessions', label: 'Sessões', icon: MonitorSmartphone, keywords: 'dispositivos login logout revogar' },
   { to: '/versions', label: 'Versões', icon: History, keywords: 'release changelog historico' },
   { to: '/profile', label: 'Meu perfil', icon: UserRound, keywords: 'conta usuario debug' },
