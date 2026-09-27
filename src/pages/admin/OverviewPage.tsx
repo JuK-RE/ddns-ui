@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Globe, History, MonitorSmartphone } from 'lucide-react'
 import { useAuth } from '../../auth/AuthContext'
 import { api } from '../../lib/api'
+import { MAX_HOSTS, listHosts } from '../../lib/hosts'
 import { getAvatarUrl } from '../../lib/avatar'
 import type { Session } from '../../types'
 import { IconBadge } from '../../ui'
@@ -27,6 +28,7 @@ export function OverviewPage() {
   const [sessions, setSessions] = useState<{ total: number; active: number } | null>(null)
   const [hello] = useState(greeting)
   const [versions, setVersions] = useState<Version[] | null>(null)
+  const [hosts, setHosts] = useState<{ used: number; limit: number } | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -38,6 +40,9 @@ export function OverviewPage() {
       .get<{ versions: Version[] }>('/versions')
       .then(({ data }) => !cancelled && setVersions(data.versions))
       .catch(() => !cancelled && setVersions([]))
+    listHosts()
+      .then((res) => !cancelled && setHosts({ used: res.used, limit: res.limit }))
+      .catch(() => !cancelled && setHosts({ used: 0, limit: MAX_HOSTS }))
     return () => {
       cancelled = true
     }
@@ -84,28 +89,18 @@ export function OverviewPage() {
           </span>
         </Link>
 
-        <div className="admin-card admin-stat">
+        <Link to="/hosts" className="admin-card admin-stat">
           <span className="admin-stat-label">
             <IconBadge size="sm">
               <Globe size={14} />
             </IconBadge> Hosts
           </span>
-          <span className="admin-stat-value">—</span>
-          <span className="admin-stat-hint">Em breve</span>
-        </div>
+          <span className="admin-stat-value">{hosts ? `${hosts.used} de ${hosts.limit}` : '—'}</span>
+          <span className="admin-stat-hint">
+            {hosts ? (hosts.used === 0 ? 'Crie seu primeiro host' : 'Gerenciar hosts') : 'Carregando…'}
+          </span>
+        </Link>
       </div>
-
-      <section className="admin-card admin-soon">
-        <IconBadge>
-          <Globe size={17} />
-        </IconBadge>
-        <div>
-          <strong>Gerenciamento de hosts chegando</strong>
-          <p>
-            Em breve você vai cadastrar hosts aqui e atualizar o IP deles via HTTP ou pelo cliente CLI em Go.
-          </p>
-        </div>
-      </section>
     </>
   )
 }
