@@ -1,13 +1,13 @@
 import { useNavigate } from 'react-router-dom'
-import { LogOut, RefreshCw } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 import { useAuth } from '../../auth/AuthContext'
+import { SessionsPanel } from '../../components/SessionsPanel'
 import { getAvatarUrl } from '../../lib/avatar'
-import { hasSessionHint } from '../../lib/api'
 import { Button } from '../../ui'
 import { PageHeader } from './PageHeader'
 
 export function ProfilePage() {
-  const { user, loading, lastError, refresh, logout } = useAuth()
+  const { user, logout } = useAuth()
   const navigate = useNavigate()
 
   if (!user) return null
@@ -21,7 +21,7 @@ export function ProfilePage() {
     <>
       <PageHeader
         title="Meu perfil"
-        description="Dados da sua conta, vindos do provedor OAuth usado no login."
+        description="Dados da sua conta, vindos do provedor usado no login, e os dispositivos conectados."
         actions={
           <Button variant="outline" className="ui-btn--danger" onClick={() => void handleLogout()}>
             <LogOut size={15} /> Sair
@@ -43,25 +43,17 @@ export function ProfilePage() {
           <dd>{user.email ?? '—'}</dd>
           <dt>Usuário</dt>
           <dd>{user.username ?? '—'}</dd>
-          <dt>ID</dt>
-          <dd>{user.id}</dd>
           <dt>Conta criada em</dt>
-          <dd>{new Date(user.created_at).toLocaleString('pt-BR')}</dd>
+          <dd>{new Date(user.created_at).toLocaleDateString('pt-BR')}</dd>
         </dl>
       </section>
 
-      {/* Painel de debug temporário (veio da antiga /auth) — pode remover
-          depois que o login estiver estável. */}
       <section className="admin-card">
-        <details className="debug-box">
-          <summary>Debug: estado da sessão</summary>
-          <button type="button" onClick={() => void refresh()}>
-            <RefreshCw size={12} style={{ verticalAlign: '-2px', marginRight: 6 }} />
-            Recarregar /auth/me
-          </button>
-          {lastError && <p className="error">Erro: {lastError}</p>}
-          <pre>{JSON.stringify({ loading, user, sessaoNesteNavegador: hasSessionHint() }, null, 2)}</pre>
-        </details>
+        <h2>Dispositivos conectados</h2>
+        <p className="admin-section-lead">
+          Cada login (navegador ou dispositivo) vira uma sessão. Desconecte qualquer uma que você não reconheça.
+        </p>
+        <SessionsPanel showTitle={false} />
       </section>
     </>
   )

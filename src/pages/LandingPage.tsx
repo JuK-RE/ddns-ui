@@ -17,7 +17,7 @@ import {
 import { SiGithub, SiMikrotik, SiUbiquiti, SiPfsense, SiTplink, SiUbuntu } from 'react-icons/si'
 import { FaWindows } from 'react-icons/fa'
 import { useAuth } from '../auth/AuthContext'
-import { AnimatedLine, BrandLockup, ButtonLink, Eyebrow, REPO_URL, SiteFooter, SiteNav } from '../ui'
+import { AnimatedLine, BrandLockup, ButtonLink, Eyebrow, ORG_URL, SiteFooter, SiteNav } from '../ui'
 import { FaqSection } from './landing/FaqSection'
 import { usePageMeta } from '../seo/usePageMeta'
 import './LandingPage.css'
@@ -166,7 +166,10 @@ export function LandingPage() {
   return (
     <div className="landing">
       <SiteNav>
-        <ButtonLink variant="ghost" size="sm" href={REPO_URL} external className="landing-nav-github">
+        <ButtonLink variant="ghost" size="sm" to="/docs">
+          Docs
+        </ButtonLink>
+        <ButtonLink variant="ghost" size="sm" href={ORG_URL} external className="landing-nav-github">
           <SiGithub size={14} />
           GitHub
         </ButtonLink>
@@ -193,7 +196,7 @@ export function LandingPage() {
           <ButtonLink to={panelHref} size="lg">
             {panelLabel}
           </ButtonLink>
-          <ButtonLink variant="outline" size="lg" href={REPO_URL} external>
+          <ButtonLink variant="outline" size="lg" href={ORG_URL} external>
             <SiGithub size={15} />
             Ver no GitHub
           </ButtonLink>
@@ -292,12 +295,12 @@ export function LandingPage() {
               Cloudflare
             </a>
             , com uma base rápida e confiável. E por ser{' '}
-            <a className="landing-inline-link" href={REPO_URL} target="_blank" rel="noreferrer">
+            <a className="landing-inline-link" href={ORG_URL} target="_blank" rel="noreferrer">
               open source
             </a>
             , você pode auditar o código, adaptar ou rodar sua própria instância.
           </p>
-          <a className="landing-text-link" href={REPO_URL} target="_blank" rel="noreferrer">
+          <a className="landing-text-link" href={ORG_URL} target="_blank" rel="noreferrer">
             <SiGithub size={14} />
             Ver código-fonte no GitHub
           </a>

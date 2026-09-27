@@ -42,6 +42,15 @@ export async function updateHost(id: string, patch: { label?: string; connector?
   return data.host
 }
 
+/** Página DNS: liga/desliga o DDNS e edita o IPv4/IPv6 na mão (`null` remove o registro). */
+export async function updateDns(
+  id: string,
+  patch: { ddns_enabled?: boolean; ipv4?: string | null; ipv6?: string | null }
+): Promise<Host> {
+  const { data } = await api.patch<{ host: Host }>(`/hosts/${id}/dns`, patch)
+  return data.host
+}
+
 export async function regenerateToken(id: string): Promise<{ token: string; token_prefix: string }> {
   const { data } = await api.post<{ token: string; token_prefix: string }>(`/hosts/${id}/token`)
   return data
@@ -70,7 +79,8 @@ export function apiError(err: unknown, fallback: string): { message: string; cod
 const ONLINE_MS = 90 * 60 * 1000
 const STALE_MS = 24 * 60 * 60 * 1000
 
-export function hostStatus(host: Pick<Host, 'last_check_at'>, now: number): HostStatus {
+export function hostStatus(host: Pick<Host, 'last_check_at' | 'ddns_enabled'>, now: number): HostStatus {
+  if (!host.ddns_enabled) return 'paused'
   if (!host.last_check_at) return 'pending'
   const age = now - new Date(host.last_check_at).getTime()
   if (age < ONLINE_MS) return 'online'
@@ -83,6 +93,7 @@ export const STATUS_LABEL: Record<HostStatus, string> = {
   online: 'Online',
   stale: 'Sem contato',
   offline: 'Offline',
+  paused: 'DDNS pausado',
 }
 
 export const CONNECTOR_LABEL: Record<Connector, string> = {

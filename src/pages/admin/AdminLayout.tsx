@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { CircleHelp, ExternalLink, LogOut, Menu, PanelLeft, Search, UserRound, X } from 'lucide-react'
+import { BookOpen, CircleHelp, ExternalLink, LogOut, Menu, PanelLeft, Search, UserRound, X } from 'lucide-react'
 import { useAuth } from '../../auth/AuthContext'
 import { getAvatarUrl } from '../../lib/avatar'
-import { BrandLockup, REPO_URL, SUPPORT_URL } from '../../ui'
+import { BrandLockup, ORG_URL, SUPPORT_URL } from '../../ui'
 import { StatusBadge } from '../../components/StatusBadge'
 import { filterNav } from './nav'
 import '../../App.css'
@@ -36,7 +36,7 @@ export function AdminLayout() {
   const searchRef = useRef<HTMLInputElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
 
-  const items = filterNav(query)
+  const items = filterNav(query, Boolean(user?.is_admin))
 
   // Fecha gaveta/menu ao trocar de página. Ajuste de estado durante o
   // render (padrão recomendado pelo React) em vez de setState num effect.
@@ -119,6 +119,10 @@ export function AdminLayout() {
         </div>
 
         <div className="admin-topbar-right">
+          <Link className="admin-top-link" to="/docs">
+            <BookOpen size={15} />
+            <span>Docs</span>
+          </Link>
           <a className="admin-top-link" href={SUPPORT_URL} target="_blank" rel="noreferrer">
             <CircleHelp size={15} />
             <span>Suporte</span>
@@ -234,8 +238,9 @@ export function AdminLayout() {
 
         <footer className="admin-footer">
           <nav>
+            <Link to="/docs">Docs</Link>
             <a href={SUPPORT_URL} target="_blank" rel="noreferrer">Suporte</a>
-            <a href={REPO_URL} target="_blank" rel="noreferrer">GitHub</a>
+            <a href={ORG_URL} target="_blank" rel="noreferrer">GitHub</a>
             <Link to="/home">Site</Link>
           </nav>
           <StatusBadge />

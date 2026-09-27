@@ -16,7 +16,7 @@ import './Hosts.css'
 
 type Modal = 'token' | 'delete' | null
 
-const SOURCE_LABEL: Record<string, string> = { v1: 'HTTP (v1)', dyndns2: 'dyndns2', cli: 'CLI' }
+const SOURCE_LABEL: Record<string, string> = { v1: 'HTTP (v1)', dyndns2: 'dyndns2', cli: 'CLI', manual: 'Manual (painel)' }
 
 export function HostDetailPage() {
   const { id = '' } = useParams()
@@ -156,14 +156,24 @@ export function HostDetailPage() {
           <code>{host.fqdn}</code>
           <CopyButton text={host.fqdn} label="Copiar endereço" />
         </span>
-        <HostStatusBadge status={status} />
+        <span className="host-detail-top-right">
+          <Link to="/dns" className="host-inline-link">Editar DNS</Link>
+          <HostStatusBadge status={status} />
+        </span>
       </div>
 
       <div className="admin-stats host-stats">
         <div className="admin-card admin-stat">
-          <span className="admin-stat-label">IP atual</span>
+          <span className="admin-stat-label">IPv4 (A)</span>
           <span className="admin-stat-value host-stat-mono">{host.last_ipv4 ?? '—'}</span>
-          <span className="admin-stat-hint">{host.last_ipv4 ? 'Registro A (IPv4)' : 'Aguardando a primeira chamada'}</span>
+          <span className="admin-stat-hint">{host.last_ipv4 ? 'Registro A' : 'Sem registro A'}</span>
+        </div>
+        <div className="admin-card admin-stat">
+          <span className="admin-stat-label">IPv6 (AAAA)</span>
+          <span className="admin-stat-value host-stat-mono host-stat-v6" title={host.last_ipv6 ?? undefined}>
+            {host.last_ipv6 ?? '—'}
+          </span>
+          <span className="admin-stat-hint">{host.last_ipv6 ? 'Registro AAAA' : 'Sem registro AAAA'}</span>
         </div>
         <div className="admin-card admin-stat">
           <span className="admin-stat-label">Última verificação</span>
@@ -209,6 +219,7 @@ export function HostDetailPage() {
               <thead>
                 <tr>
                   <th>Data</th>
+                  <th>Tipo</th>
                   <th>IP</th>
                   <th>Origem</th>
                 </tr>
@@ -217,6 +228,7 @@ export function HostDetailPage() {
                 {history.map((h) => (
                   <tr key={h.id}>
                     <td>{formatDateTime(h.created_at)}</td>
+                    <td className="host-muted">{h.record_type}</td>
                     <td>
                       <code>{h.old_ip ?? '—'}</code> → <code>{h.new_ip}</code>
                     </td>
