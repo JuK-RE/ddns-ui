@@ -14,9 +14,9 @@ import './Hosts.css'
 type Loaded = { hosts: Host[]; limit: number } | 'error' | null
 
 const USE_CASES = [
-  { title: 'Conectar um roteador', text: 'MikroTik, pfSense/OPNsense e UniFi atualizam o IP sozinhos.', to: '/hosts/new?connector=pfsense' },
-  { title: 'Servidor ou PC', text: 'Um comando curl ou PowerShell agendado a cada 15 minutos.', to: '/hosts/new?connector=http' },
-  { title: 'Acesso remoto e câmeras', text: 'Endereço fixo pra RDP, DVR e servidores em casa.', to: '/hosts/new?zone=cam.juk.re' },
+  { title: 'Conectar um roteador', text: 'MikroTik, pfSense/OPNsense, UniFi e ddclient atualizam o IP sozinhos.', to: '/docs/conectar-roteador' },
+  { title: 'Servidor ou PC', text: 'Um comando curl ou PowerShell agendado a cada 15 minutos.', to: '/docs/conectar-pc' },
+  { title: 'IPv6, DNS e DDNS pausado', text: 'Edite o registro na mão e escolha quando o DDNS atualiza.', to: '/docs/dns-ipv6' },
 ]
 
 export function HostsPage() {
@@ -105,6 +105,7 @@ export function HostsPage() {
               <option value="stale">Sem contato</option>
               <option value="offline">Offline</option>
               <option value="pending">Aguardando conexão</option>
+              <option value="paused">DDNS pausado</option>
             </select>
             <button type="button" className="host-icon-btn" onClick={refresh} aria-label="Atualizar lista" title="Atualizar">
               <RefreshCw size={15} className={reloading ? 'host-spin' : ''} />
@@ -165,7 +166,20 @@ export function HostsPage() {
                         <td>
                           <HostStatusBadge status={hostStatus(h, now)} />
                         </td>
-                        <td>{h.last_ipv4 ? <code>{h.last_ipv4}</code> : <span className="host-muted">—</span>}</td>
+                        <td>
+                          {h.last_ipv4 || h.last_ipv6 ? (
+                            <>
+                              {h.last_ipv4 && <code>{h.last_ipv4}</code>}
+                              {h.last_ipv6 && (
+                                <code className="host-ipv6" title={h.last_ipv6}>
+                                  {h.last_ipv6}
+                                </code>
+                              )}
+                            </>
+                          ) : (
+                            <span className="host-muted">—</span>
+                          )}
+                        </td>
                         <td className="host-muted">{h.last_check_at ? relativeTime(h.last_check_at, now) : '—'}</td>
                         <td>
                           <span className="host-connector-cell" title={CONNECTOR_LABEL[h.connector]}>
@@ -199,9 +213,9 @@ export function HostsPage() {
 
         <aside className="host-aside">
           <h2>Casos de uso</h2>
-          <p>Veja como usar o DDNS em cenários diferentes.</p>
+          <p>Guias rápidos da documentação para cada cenário.</p>
           {USE_CASES.map((c) => (
-            <Link key={c.title} to={atLimit ? '/hosts' : c.to} className="admin-card host-usecase">
+            <Link key={c.title} to={c.to} className="admin-card host-usecase">
               <span>
                 <strong>{c.title}</strong>
                 <small>{c.text}</small>

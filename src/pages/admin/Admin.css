@@ -624,3 +624,8 @@ a.admin-stat:hover {
     margin-bottom: 10px;
   }
 }
+
+.admin-section-lead {
+  margin: -4px 0 12px;
+  font-size: 13.5px;
+}

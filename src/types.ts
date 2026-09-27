@@ -5,6 +5,8 @@ export type User = {
   name: string | null
   avatar_url: string | null
   created_at: string
+  /** Administrador (ADMIN_EMAILS no backend): vê a página de Versões. */
+  is_admin?: boolean
 }
 
 export type Session = {
@@ -42,7 +44,10 @@ export type Host = {
   connector: Connector
   /** Só o começo do token ("jukre_Q2x9"), pra reconhecer no painel. */
   token_prefix: string
+  /** false = DDNS pausado: o conector não altera mais o IP (só edição manual). */
+  ddns_enabled: boolean
   last_ipv4: string | null
+  last_ipv6: string | null
   /** ISO 8601. Só é regravada de hora em hora quando o IP não muda. */
   last_check_at: string | null
   last_change_at: string | null
@@ -50,14 +55,14 @@ export type Host = {
   created_at: string
 }
 
-export type HostStatus = 'pending' | 'online' | 'stale' | 'offline'
+export type HostStatus = 'pending' | 'online' | 'stale' | 'offline' | 'paused'
 
 export type HostHistoryEntry = {
   id: number
   record_type: string
   old_ip: string | null
   new_ip: string
-  /** "v1" | "dyndns2" | "cli". */
+  /** "v1" | "dyndns2" | "cli" | "manual" (edição pelo painel). */
   source: string
   user_agent: string | null
   created_at: string

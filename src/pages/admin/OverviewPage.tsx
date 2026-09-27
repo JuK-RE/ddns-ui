@@ -1,20 +1,16 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Globe, History, MonitorSmartphone } from 'lucide-react'
+import { Globe, History, Wifi } from 'lucide-react'
 import { useAuth } from '../../auth/AuthContext'
 import { api } from '../../lib/api'
-import { MAX_HOSTS, listHosts } from '../../lib/hosts'
 import { getAvatarUrl } from '../../lib/avatar'
-import type { Session } from '../../types'
+import { MAX_HOSTS, hostStatus, listHosts } from '../../lib/hosts'
+import { useNow } from '../../lib/time'
+import type { Host } from '../../types'
 import { IconBadge } from '../../ui'
 import { PageHeader } from './PageHeader'
 
 type Version = { id: number; version: string; description: string | null; created_at: string }
-
-function countActive(sessions: Session[]) {
-  const now = Date.now()
-  return sessions.filter((s) => !s.revoked_at && new Date(s.expires_at).getTime() > now).length
-}
 
 function greeting() {
   const h = new Date().getHours()
@@ -25,31 +21,33 @@ function greeting() {
 
 export function OverviewPage() {
   const { user } = useAuth()
-  const [sessions, setSessions] = useState<{ total: number; active: number } | null>(null)
+  const now = useNow()
   const [hello] = useState(greeting)
+  const [hosts, setHosts] = useState<{ list: Host[]; limit: number } | null>(null)
   const [versions, setVersions] = useState<Version[] | null>(null)
-  const [hosts, setHosts] = useState<{ used: number; limit: number } | null>(null)
+  const isAdmin = Boolean(user?.is_admin)
 
   useEffect(() => {
     let cancelled = false
-    api
-      .get<{ sessions: Session[] }>('/auth/sessions')
-      .then(({ data }) => !cancelled && setSessions({ total: data.sessions.length, active: countActive(data.sessions) }))
-      .catch(() => !cancelled && setSessions({ total: 0, active: 0 }))
-    api
-      .get<{ versions: Version[] }>('/versions')
-      .then(({ data }) => !cancelled && setVersions(data.versions))
-      .catch(() => !cancelled && setVersions([]))
     listHosts()
-      .then((res) => !cancelled && setHosts({ used: res.used, limit: res.limit }))
-      .catch(() => !cancelled && setHosts({ used: 0, limit: MAX_HOSTS }))
+      .then((res) => !cancelled && setHosts({ list: res.hosts, limit: res.limit }))
+      .catch(() => !cancelled && setHosts({ list: [], limit: MAX_HOSTS }))
+
+    // Última versão: só administradores (a rota é restrita no backend).
+    if (isAdmin) {
+      api
+        .get<{ versions: Version[] }>('/versions')
+        .then(({ data }) => !cancelled && setVersions(data.versions))
+        .catch(() => !cancelled && setVersions([]))
+    }
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [isAdmin])
 
   if (!user) return null
 
+  const online = hosts ? hosts.list.filter((h) => hostStatus(h, now) === 'online').length : null
   const latest = versions?.[0]
 
   return (
@@ -67,39 +65,41 @@ export function OverviewPage() {
       </section>
 
       <div className="admin-stats">
-        <Link to="/sessions" className="admin-card admin-stat">
-          <span className="admin-stat-label">
-            <IconBadge size="sm">
-              <MonitorSmartphone size={14} />
-            </IconBadge> Sessões ativas
-          </span>
-          <span className="admin-stat-value">{sessions?.active ?? '—'}</span>
-          <span className="admin-stat-hint">{sessions ? `${sessions.total} no histórico` : 'Carregando…'}</span>
-        </Link>
-
-        <Link to="/versions" className="admin-card admin-stat">
-          <span className="admin-stat-label">
-            <IconBadge size="sm">
-              <History size={14} />
-            </IconBadge> Última versão
-          </span>
-          <span className="admin-stat-value">{versions ? (latest?.version ?? 'Nenhuma') : '—'}</span>
-          <span className="admin-stat-hint">
-            {latest ? new Date(latest.created_at).toLocaleDateString('pt-BR') : versions ? 'Nada registrado ainda' : 'Carregando…'}
-          </span>
-        </Link>
-
         <Link to="/hosts" className="admin-card admin-stat">
           <span className="admin-stat-label">
             <IconBadge size="sm">
               <Globe size={14} />
             </IconBadge> Hosts
           </span>
-          <span className="admin-stat-value">{hosts ? `${hosts.used} de ${hosts.limit}` : '—'}</span>
+          <span className="admin-stat-value">{hosts ? `${hosts.list.length} de ${hosts.limit}` : '—'}</span>
           <span className="admin-stat-hint">
-            {hosts ? (hosts.used === 0 ? 'Crie seu primeiro host' : 'Gerenciar hosts') : 'Carregando…'}
+            {hosts ? (hosts.list.length === 0 ? 'Crie seu primeiro host' : 'Gerenciar hosts') : 'Carregando…'}
           </span>
         </Link>
+
+        <Link to="/hosts" className="admin-card admin-stat">
+          <span className="admin-stat-label">
+            <IconBadge size="sm">
+              <Wifi size={14} />
+            </IconBadge> Online agora
+          </span>
+          <span className="admin-stat-value">{online ?? '—'}</span>
+          <span className="admin-stat-hint">Com contato na última hora e meia</span>
+        </Link>
+
+        {isAdmin && (
+          <Link to="/versions" className="admin-card admin-stat">
+            <span className="admin-stat-label">
+              <IconBadge size="sm">
+                <History size={14} />
+              </IconBadge> Última versão
+            </span>
+            <span className="admin-stat-value">{versions ? (latest?.version ?? 'Nenhuma') : '—'}</span>
+            <span className="admin-stat-hint">
+              {latest ? new Date(latest.created_at).toLocaleDateString('pt-BR') : versions ? 'Nada registrado ainda' : 'Carregando…'}
+            </span>
+          </Link>
+        )}
       </div>
     </>
   )

@@ -58,3 +58,10 @@ export function GuestOnly() {
 
   return <Outlet />
 }
+
+/** Rotas só de administrador (ex.: /versions). Usuário comum volta pro painel. */
+export function AdminOnly() {
+  const { user } = useAuth()
+  if (!user?.is_admin) return <Navigate to="/" replace />
+  return <Outlet />
+}

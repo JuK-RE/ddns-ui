@@ -4,6 +4,10 @@ import type { Connector } from '../../types'
 import { CodeBlock, FieldRow } from './CodeBlock'
 
 // Tutoriais por conector, já preenchidos com o endereço e o token.
+// Scripts (curl, PowerShell, MikroTik) descobrem o IP público no ipify
+// (api.ipify.org = IPv4, api6.ipify.org = IPv6) e mandam em `?myip=`. Sem
+// isso, um PC com IPv4 e IPv6 pode chamar a API por IPv6 sem querer e
+// atualizar o registro errado.
 // Intervalo: padrão de 15 min, mínimo de 5 min (a API recusa chamadas mais
 // próximas que isso com 429/abuse). Conectores dyndns2 e a futura CLI só
 // chamam a API quando o IP muda.
@@ -41,6 +45,16 @@ function IntervalSelect({ value, onChange }: { value: Interval; onChange: (v: In
   )
 }
 
+function IpifyHint() {
+  return (
+    <p className="host-hint host-hint--block">
+      Os comandos consultam o <a href="https://www.ipify.org/" target="_blank" rel="noreferrer" className="host-inline-link">ipify</a>{' '}
+      (<code>api.ipify.org</code> devolve o seu IPv4 e <code>api6.ipify.org</code> o IPv6) e mandam o valor em{' '}
+      <code>?myip=</code>. Assim um PC com IPv4 e IPv6 nunca atualiza o registro errado.
+    </p>
+  )
+}
+
 export function ConnectorGuide({
   connector,
   fqdn,
@@ -60,6 +74,7 @@ export function ConnectorGuide({
   const updateUrl = `${PUBLIC_UPDATE_BASE}/v1/update/${tokenText}`
   const host = PUBLIC_UPDATE_BASE.replace(/^https?:\/\//, '')
   const copyable = !masked
+  const ipv4Url = `${updateUrl}?myip=`
 
   return (
     <div className="host-guide">
@@ -72,26 +87,43 @@ export function ConnectorGuide({
       {connector === 'http' && (
         <>
           <IntervalSelect value={interval} onChange={setIntervalValue} />
+          <IpifyHint />
 
           <CodeBlock
-            title="Linux / macOS (cron)"
+            title="Linux / macOS (cron): IPv4"
             copyable={copyable}
-            code={`${cronFor(interval)} curl -4 -fsS "${updateUrl}" >/dev/null`}
+            code={`${cronFor(interval)} curl -fsS "${ipv4Url}$(curl -fsS https://api.ipify.org)" >/dev/null`}
           />
 
           <CodeBlock
             title="Windows (PowerShell): teste"
             copyable={copyable}
-            code={`Invoke-RestMethod "${updateUrl}"`}
+            code={[
+              '$ip = Invoke-RestMethod "https://api.ipify.org"',
+              `Invoke-RestMethod "${ipv4Url}$ip"`,
+            ].join('\n')}
           />
 
           <CodeBlock
             title={`Windows (PowerShell): agendar a cada ${interval} min`}
             copyable={copyable}
             code={[
-              `$acao = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument '-NoProfile -Command "Invoke-RestMethod ''${updateUrl}''"'`,
+              `$acao = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument '-NoProfile -Command "$ip = Invoke-RestMethod https://api.ipify.org; Invoke-RestMethod (''${ipv4Url}'' + $ip)"'`,
               `$gatilho = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes ${interval}) -RepetitionDuration (New-TimeSpan -Days 3650)`,
               `Register-ScheduledTask -TaskName 'JUKre DDNS' -Action $acao -Trigger $gatilho`,
+            ].join('\n')}
+          />
+
+          <CodeBlock
+            title="IPv6 (opcional): só se a sua rede tem IPv6 público"
+            copyable={copyable}
+            code={[
+              '# Linux / macOS',
+              `curl -fsS "${ipv4Url}$(curl -fsS https://api6.ipify.org)"`,
+              '',
+              '# Windows (PowerShell)',
+              '$ip6 = Invoke-RestMethod "https://api6.ipify.org"',
+              `Invoke-RestMethod "${ipv4Url}$ip6"`,
             ].join('\n')}
           />
         </>
@@ -110,7 +142,7 @@ export function ConnectorGuide({
               '  :local ip [/ip address get [find interface="pppoe-out1"] address]',
               '  :set ip [:pick $ip 0 [:find $ip "/"]]',
               '  :if ($ip != $jukreLastIp) do={',
-              `    /tool fetch url="${updateUrl}" output=none`,
+              `    /tool fetch url=("${ipv4Url}" . $ip) output=none`,
               '    :set jukreLastIp $ip',
               '  }',
               '}',
@@ -120,9 +152,15 @@ export function ConnectorGuide({
           <p className="host-hint">Troque <code>pppoe-out1</code> pela interface de internet do seu MikroTik.</p>
 
           <CodeBlock
-            title="Atrás de CGNAT (IP da WAN privado): versão simples"
+            title="Atrás de CGNAT (IP da WAN privado): descobre o IP público no ipify"
             copyable={copyable}
-            code={`/system scheduler add name=jukre-ddns interval=${interval === 60 ? '1h' : `${interval}m`} on-event="/tool fetch url=\\"${updateUrl}\\" output=none"`}
+            code={[
+              '/system script add name=jukre-ddns source={',
+              '  :local ip ([/tool fetch url="https://api.ipify.org" output=user as-value]->"data")',
+              `  /tool fetch url=("${ipv4Url}" . $ip) output=none`,
+              '}',
+              `/system scheduler add name=jukre-ddns interval=${interval === 60 ? '1h' : `${interval}m`} on-event=jukre-ddns`,
+            ].join('\n')}
           />
         </>
       )}
@@ -138,6 +176,7 @@ export function ConnectorGuide({
             <FieldRow label="Usuário" value={fqdn} />
             <FieldRow label="Senha" value={tokenText} copyable={copyable} />
           </div>
+          <p className="host-hint">Para IPv6, crie uma segunda entrada de DNS dinâmico com o IP de IPv6 da WAN, se o seu firmware permitir.</p>
         </>
       )}
 
@@ -163,7 +202,20 @@ export function ConnectorGuide({
           <CodeBlock
             title="/etc/ddclient.conf"
             copyable={copyable}
-            code={['daemon=900', 'use=web', 'protocol=dyndns2', `server=${host}`, 'ssl=yes', `login=${fqdn}`, `password=${tokenText}`, fqdn].join('\n')}
+            code={[
+              'daemon=900',
+              'use=web',
+              'web=https://api.ipify.org',
+              '# IPv6 (ddclient 3.10+): descomente as duas linhas abaixo',
+              '# usev6=webv6',
+              '# webv6=https://api6.ipify.org',
+              'protocol=dyndns2',
+              `server=${host}`,
+              'ssl=yes',
+              `login=${fqdn}`,
+              `password=${tokenText}`,
+              fqdn,
+            ].join('\n')}
           />
         </>
       )}

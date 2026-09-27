@@ -19,6 +19,11 @@ export const COMPANY_URL = 'https://www.jucasoft.com.br/'
 /** Páginas públicas que entram no sitemap. */
 export const PUBLIC_ROUTES: { path: string; changefreq: 'daily' | 'weekly' | 'monthly'; priority: number }[] = [
   { path: '/', changefreq: 'weekly', priority: 1 },
+  { path: '/docs', changefreq: 'monthly', priority: 0.8 },
+  { path: '/docs/criar-host', changefreq: 'monthly', priority: 0.6 },
+  { path: '/docs/conectar-pc', changefreq: 'monthly', priority: 0.6 },
+  { path: '/docs/conectar-roteador', changefreq: 'monthly', priority: 0.6 },
+  { path: '/docs/dns-ipv6', changefreq: 'monthly', priority: 0.6 },
 ]
 
 /** Rotas que não devem ser indexadas (login e painel). */
