@@ -125,46 +125,60 @@
   font-weight: 500;
 }
 
-/* Seletor da navegação no mobile (ver @media 800px) — mostra a página atual
-   e abre a lista completa por baixo, como o dropdown lateral do Agno.
-   No desktop a sidebar já fica sempre visível, então isso nem aparece. */
-.docs-nav-toggle {
+/* Mobile: botão de menu, barra "Grupo › Página", gaveta lateral e fundo
+   escurecido (estilo docs.agno.com). No desktop nada disso aparece. */
+.docs-menu-btn,
+.docs-crumb,
+.docs-nav-head,
+.docs-backdrop {
   display: none;
-  width: 100%;
+}
+
+.docs-menu-btn {
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: 16px;
-  padding: 11px 14px;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
   border: 1px solid var(--docs-line);
-  border-radius: 10px;
-  background: var(--cf-surface);
+  border-radius: 8px;
+  background: transparent;
   color: var(--text-h);
-  font-size: 14px;
-  font-weight: 500;
-  font-family: inherit;
   cursor: pointer;
 }
 
-.docs-nav-toggle span {
+.docs-menu-btn:hover {
+  background: var(--cf-surface-hover);
+}
+
+.docs-crumb {
+  position: sticky;
+  top: 56px;
+  z-index: 15;
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 0;
+  border-bottom: 1px solid var(--docs-line);
+  background: var(--docs-bg);
+  color: var(--cf-ink-soft);
+  font-family: inherit;
+  font-size: 13.5px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.docs-crumb-page {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: var(--text-h);
+  font-weight: 500;
 }
 
-.docs-nav-toggle[aria-expanded='true'] {
-  border-radius: 10px 10px 0 0;
-  border-bottom-color: transparent;
-}
-
-.docs-nav-toggle-chevron {
-  flex-shrink: 0;
-  color: var(--cf-ink-soft);
-  transition: transform 0.15s ease;
-}
-
-.docs-nav-toggle[aria-expanded='true'] .docs-nav-toggle-chevron {
-  transform: rotate(180deg);
+.docs-crumb-group {
+  white-space: nowrap;
 }
 
 .docs-toc {
@@ -322,90 +336,9 @@
   border-bottom: 0;
 }
 
-/* CodeBlock (o mesmo do painel) dentro dos docs. O painel define as cores
-   em .admin-shell, que não existe aqui: por isso os tokens abaixo. */
-.docs-shell {
-  --admin-line: var(--docs-line);
-  --admin-hover: var(--cf-surface-hover);
-}
-
-.docs-article .host-code {
+/* Bloco de código nos docs (o estilo base fica em CodeBlock.css) */
+.docs-article .code-block {
   margin: 16px 0 20px;
-  border: 1px solid var(--docs-line);
-  border-radius: 10px;
-  background: var(--cf-surface);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-}
-
-.docs-article .host-code-head {
-  min-height: 38px;
-  padding: 5px 6px 5px 14px;
-  border-bottom: 1px solid var(--docs-line);
-  background: var(--cf-surface-soft);
-  font-family: var(--mono);
-  font-size: 11.5px;
-  letter-spacing: 0.04em;
-  color: var(--cf-ink-tab);
-}
-
-.docs-article .host-code-head > span:first-child {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* bolinha de "terminal" antes do título */
-.docs-article .host-code-head > span:first-child::before {
-  content: '';
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--accent);
-  opacity: 0.8;
-}
-
-.docs-article .host-code pre {
-  padding: 14px 16px;
-  background: var(--code-bg);
-}
-
-.docs-article .host-code pre code {
-  display: block;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  font-size: 13px;
-  line-height: 1.7;
-  white-space: pre;
-}
-
-/* Botão "Copiar" com texto (CopyButton showLabel) */
-.host-copy.host-copy--labeled {
-  width: auto;
-  gap: 6px;
-  padding: 0 10px;
-  height: 28px;
-  display: inline-flex;
-  align-items: center;
-  border: 1px solid var(--docs-line, var(--cf-line));
-  border-radius: 7px;
-  background: var(--cf-surface);
-  font-family: inherit;
-  font-size: 12.5px;
-  letter-spacing: 0;
-  color: var(--text-h);
-  transition: border-color 0.15s ease, background 0.15s ease;
-}
-
-.host-copy.host-copy--labeled:hover {
-  border-color: var(--cf-line-pill);
-  background: var(--cf-surface-hover);
-}
-
-.host-copy.host-copy--labeled.is-copied {
-  border-color: var(--status-success-border);
-  background: var(--status-success-bg);
-  color: var(--status-success-fg);
 }
 
 /* Célula de tabela com um valor copiável (URL, usuário…) */
@@ -482,39 +415,81 @@
     padding: 0 16px;
   }
 
-  .docs-nav-toggle {
+  .docs-menu-btn,
+  .docs-crumb,
+  .docs-nav-head {
     display: flex;
   }
 
-  /* Escondida por padrão: só aparece por baixo do toggle acima, como um
-     dropdown (não fica ocupando espaço da tela o tempo todo). */
+  .docs-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  .docs-backdrop.is-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Gaveta que entra pela esquerda */
   .docs-nav {
-    display: none;
-    position: static;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 50;
+    width: min(300px, 85vw);
     max-height: none;
-    box-sizing: border-box;
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--docs-line);
-    border-top: 0;
-    border-radius: 0 0 10px 10px;
-    background: var(--cf-surface);
+    padding: 0 16px 24px;
+    border-right: 1px solid var(--docs-line);
+    background: var(--docs-bg);
+    box-shadow: 8px 0 24px rgba(0, 0, 0, 0.12);
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition:
+      transform 0.22s ease,
+      visibility 0.22s;
   }
   .docs-nav.is-open {
-    display: flex;
-    flex-direction: column;
+    transform: none;
+    visibility: visible;
   }
-  .docs-nav-group {
-    margin-bottom: 8px;
+
+  .docs-nav-head {
+    position: sticky;
+    top: 0;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    margin: 0 -16px 16px;
+    padding: 0 12px 0 16px;
+    border-bottom: 1px solid var(--docs-line);
+    background: var(--docs-bg);
+    color: var(--text-h);
   }
-  .docs-nav-group:last-child {
-    margin-bottom: 0;
+
+  .docs-nav-link {
+    padding: 9px 10px;
+    font-size: 15px;
   }
+
   .docs-article {
     padding-top: 20px;
   }
   .docs-article h1 {
     font-size: 28px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .docs-nav,
+  .docs-backdrop {
+    transition: none;
   }
 }
 

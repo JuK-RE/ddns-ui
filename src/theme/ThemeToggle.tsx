@@ -29,3 +29,21 @@ export function ThemeToggle() {
     </div>
   )
 }
+
+/**
+ * Um ícone só (sol/lua) que alterna entre claro e escuro, pra headers
+ * compactos (ex.: topo dos docs). Parte do tema resolvido, então funciona
+ * também quando a preferência está em "sistema".
+ */
+export function ThemeIconButton({ className = '' }: { className?: string }) {
+  const { resolvedTheme, setTheme } = useTheme()
+  const next = resolvedTheme === 'dark' ? 'light' : 'dark'
+  const label = next === 'dark' ? 'Mudar para o tema escuro' : 'Mudar para o tema claro'
+  const Icon = resolvedTheme === 'dark' ? Sun : Moon
+
+  return (
+    <button type="button" className={`theme-icon-btn ${className}`} aria-label={label} title={label} onClick={() => setTheme(next)}>
+      <Icon size={16} strokeWidth={2} />
+    </button>
+  )
+}

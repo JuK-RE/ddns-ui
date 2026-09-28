@@ -31,6 +31,8 @@ export function HostDetailPage() {
 
   // Token novo (só existe na memória, logo após regenerar).
   const [freshToken, setFreshToken] = useState<string | null>(null)
+  // Recarrega o log de requisições depois de uma ação daqui (token, configurações).
+  const [logKey, setLogKey] = useState(0)
   const [modal, setModal] = useState<Modal>(null)
   const [busy, setBusy] = useState(false)
   const [modalError, setModalError] = useState<string | null>(null)
@@ -95,6 +97,7 @@ export function HostDetailPage() {
       const updated = await updateHost(host.id, { label: label.trim(), connector })
       setHost(updated)
       setSaveMsg({ ok: true, text: 'Alterações salvas.' })
+      setLogKey((k) => k + 1)
     } catch (err) {
       setSaveMsg({ ok: false, text: apiError(err, 'Não foi possível salvar.').message })
     } finally {
@@ -109,6 +112,7 @@ export function HostDetailPage() {
     try {
       const res = await regenerateToken(host.id)
       setFreshToken(res.token)
+      setLogKey((k) => k + 1)
       setHost({ ...host, token_prefix: res.token_prefix })
       setModal(null)
     } catch (err) {
@@ -242,7 +246,7 @@ export function HostDetailPage() {
         )}
       </section>
 
-      <HostRequestLog hostId={host.id} now={now} />
+      <HostRequestLog hostId={host.id} now={now} refreshKey={logKey} />
 
       <section className="admin-card">
         <h2>Configurações</h2>

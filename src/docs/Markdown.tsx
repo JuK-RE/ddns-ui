@@ -27,20 +27,6 @@ function renderInline(text: string): ReactNode[] {
   })
 }
 
-// Nome bonito da linguagem, pro cabeçalho do bloco de código quando o .md
-// não dá um título (```routeros → "RouterOS").
-const LANG_LABEL: Record<string, string> = {
-  routeros: 'RouterOS',
-  bash: 'Terminal',
-  sh: 'Terminal',
-  shell: 'Terminal',
-  powershell: 'PowerShell',
-  ps1: 'PowerShell',
-  ini: 'Configuração',
-  conf: 'Configuração',
-  json: 'JSON',
-}
-
 // Célula de tabela que é só um `código` (URL, usuário…) ganha botão de copiar.
 function renderCell(text: string): ReactNode {
   const only = text.match(/^`([^`]+)`$/)
@@ -83,12 +69,7 @@ export function Markdown({ blocks }: { blocks: Block[] }) {
           }
           case 'code':
             return (
-              <CodeBlock
-                key={i}
-                code={b.code}
-                title={b.title || LANG_LABEL[b.lang] || b.lang || 'Código'}
-                labeledCopy
-              />
+              <CodeBlock key={i} code={b.code} lang={b.lang || undefined} title={b.title || undefined} />
             )
           case 'quote':
             return <blockquote key={i}>{renderInline(b.text)}</blockquote>

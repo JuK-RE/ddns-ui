@@ -68,13 +68,27 @@ export type HostHistoryEntry = {
   created_at: string
 }
 
-/** Resultado de uma chamada à API de atualização (/v1/update ou /nic/update). */
-export type HostLogResult = 'updated' | 'unchanged' | 'disabled' | 'rate_limited' | 'nohost' | 'bad_ip' | 'error'
+/** Resultado de uma chamada de conector (/v1/update, /nic/update) ou de uma ação do painel. */
+export type HostLogResult =
+  | 'updated'
+  | 'unchanged'
+  | 'disabled'
+  | 'rate_limited'
+  | 'nohost'
+  | 'bad_ip'
+  | 'error'
+  | 'created'
+  | 'settings_updated'
+  | 'manual_ip'
+  | 'manual_ip_removed'
+  | 'ddns_enabled'
+  | 'ddns_disabled'
+  | 'token_regenerated'
 
-/** Uma das últimas 30 chamadas do conector (log de requisições). */
+/** Uma das últimas 30 entradas do log de requisições (conector ou painel). */
 export type HostLogEntry = {
   id: number
-  /** "v1" | "dyndns2". */
+  /** "v1" | "dyndns2" | "panel". */
   source: string
   result: HostLogResult
   /** Status HTTP devolvido ao conector. */

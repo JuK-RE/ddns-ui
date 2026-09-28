@@ -742,43 +742,6 @@
   color: var(--status-success-fg);
 }
 
-.host-code {
-  margin-top: 12px;
-  border: 1px solid var(--admin-line);
-  border-radius: 8px;
-  background: var(--code-bg);
-  overflow: hidden;
-}
-
-.host-code-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 4px 6px 4px 12px;
-  border-bottom: 1px solid var(--admin-line);
-  background: var(--cf-surface-hover);
-  font-size: 12px;
-  color: var(--cf-ink-tab);
-  min-height: 30px;
-}
-
-.host-code pre {
-  margin: 0;
-  padding: 12px;
-  overflow-x: auto;
-}
-
-.host-code pre code {
-  display: block;
-  padding: 0;
-  background: transparent;
-  font-family: var(--mono);
-  font-size: 12.5px;
-  line-height: 1.6;
-  white-space: pre;
-}
-
 .host-guide > .host-hint {
   margin-top: 10px;
 }
@@ -1159,6 +1122,11 @@
 .host-log-badge--neutral {
   background: var(--status-neutral-bg);
   color: var(--status-neutral-fg);
+}
+
+.host-log-badge--info {
+  background: var(--status-info-bg);
+  color: var(--status-info-fg);
 }
 
 .host-log-badge--warn {
