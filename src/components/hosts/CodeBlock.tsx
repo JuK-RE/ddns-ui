@@ -1,16 +1,21 @@
 import type { ReactNode } from 'react'
 import { CopyButton } from './CopyButton'
 
-/** Bloco de código com botão de copiar. `copyable={false}` quando o texto tem o token mascarado. */
+/**
+ * Bloco de código com botão de copiar. `copyable={false}` quando o texto tem o
+ * token mascarado. `labeledCopy` mostra "Copiar" escrito ao lado do ícone.
+ */
 export function CodeBlock({
   code,
   title,
   copyable = true,
+  labeledCopy = false,
   children,
 }: {
   code: string
   title?: string
   copyable?: boolean
+  labeledCopy?: boolean
   children?: ReactNode
 }) {
   return (
@@ -18,7 +23,7 @@ export function CodeBlock({
       {(title || copyable) && (
         <div className="host-code-head">
           <span>{title}</span>
-          {copyable && <CopyButton text={code} label="Copiar comando" />}
+          {copyable && <CopyButton text={code} label="Copiar comando" showLabel={labeledCopy} />}
         </div>
       )}
       <pre>

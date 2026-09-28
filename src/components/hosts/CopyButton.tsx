@@ -20,8 +20,21 @@ async function writeClipboard(text: string) {
   }
 }
 
-/** Botão de ícone que copia `text` e mostra um check por ~1,5 s. */
-export function CopyButton({ text, label = 'Copiar', className = '' }: { text: string; label?: string; className?: string }) {
+/**
+ * Botão que copia `text` e mostra um check por ~1,5 s. Só ícone por padrão;
+ * com `showLabel`, mostra também "Copiar" / "Copiado" (usado nos docs).
+ */
+export function CopyButton({
+  text,
+  label = 'Copiar',
+  className = '',
+  showLabel = false,
+}: {
+  text: string
+  label?: string
+  className?: string
+  showLabel?: boolean
+}) {
   const [copied, setCopied] = useState(false)
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
 
@@ -37,12 +50,13 @@ export function CopyButton({ text, label = 'Copiar', className = '' }: { text: s
   return (
     <button
       type="button"
-      className={`host-copy ${copied ? 'is-copied' : ''} ${className}`}
+      className={`host-copy ${showLabel ? 'host-copy--labeled' : ''} ${copied ? 'is-copied' : ''} ${className}`}
       onClick={() => void handleCopy()}
       aria-label={copied ? 'Copiado' : label}
       title={copied ? 'Copiado!' : label}
     >
       {copied ? <Check size={14} /> : <Copy size={14} />}
+      {showLabel && <span>{copied ? 'Copiado' : 'Copiar'}</span>}
     </button>
   )
 }
