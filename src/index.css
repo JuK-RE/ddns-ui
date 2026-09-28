@@ -176,10 +176,22 @@ body {
    container usando 100vw pra ir de ponta a ponta da janela. Em páginas com
    barra de rolagem vertical, 100vw fica um pouco maior que a largura visível
    real, o que cria uma rolagem lateral indesejada. Travando o overflow-x
-   aqui evita esse scroll sem afetar mais nada. */
+   aqui evita esse scroll.
+   ⚠️ `clip`, não `hidden`: `hidden` em html E body transforma o body num
+   container de rolagem próprio, e aí todo `position: sticky` (topbar e
+   sidebar do painel) passa a grudar no body — que nunca rola — e some junto
+   com a página no desktop. `clip` corta sem criar container de rolagem. */
 html,
 body {
-  overflow-x: hidden;
+  overflow-x: clip;
+}
+
+/* Navegador sem `clip` (Safari < 16): só no html, que vai pra viewport e
+   também não quebra o sticky. */
+@supports not (overflow-x: clip) {
+  html {
+    overflow-x: hidden;
+  }
 }
 
 h1,

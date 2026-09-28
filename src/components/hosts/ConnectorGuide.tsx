@@ -25,6 +25,46 @@ function cronFor(minutes: Interval) {
   return minutes === 60 ? '0 * * * *' : `*/${minutes} * * * *`
 }
 
+function routerosInterval(minutes: Interval) {
+  return minutes === 60 ? '1h' : `${minutes}m`
+}
+
+// Script do RouterOS. `urlExpr` é o miolo de uma string RouterOS que já
+// concatena `$ip` (ex.: `https://…?myip=" . $ip . "&format=text`).
+// As duas primeiras linhas removem uma versão anterior, então dá pra colar de
+// novo por cima sem erro. `/tool fetch` lança erro em 4xx/5xx: cai no
+// on-error, loga e não grava o último IP (tenta de novo na próxima rodada).
+function mikrotikScript(urlExpr: string, source: 'ipify' | 'wan', interval: string) {
+  const getIp =
+    source === 'ipify'
+      ? ['    :local ip ([/tool fetch url="https://api.ipify.org" output=user as-value]->"data")']
+      : [
+          '    :local ip [/ip address get [find interface="pppoe-out1"] address]',
+          '    :set ip [:pick $ip 0 [:find $ip "/"]]',
+        ]
+
+  return [
+    '/system scheduler remove [find name="jukre-ddns"]',
+    '/system script remove [find name="jukre-ddns"]',
+    '/system script add name=jukre-ddns source={',
+    '  :global jukreLastIp',
+    '  :do {',
+    ...getIp,
+    '    :if ($ip = $jukreLastIp) do={',
+    '      :log info ("JUK.re DDNS: IP sem mudanca (" . $ip . ")")',
+    '    } else={',
+    `      :local res ([/tool fetch url=("${urlExpr}") output=user as-value]->"data")`,
+    '      :log info ("JUK.re DDNS: " . [:pick $res 0 [:find $res "\\n"]])',
+    '      :set jukreLastIp $ip',
+    '    }',
+    '  } on-error={',
+    '    :log warning "JUK.re DDNS: falha ao atualizar (sem internet, token invalido ou limite de 5 min)"',
+    '  }',
+    '}',
+    `/system scheduler add name=jukre-ddns interval=${interval} on-event=jukre-ddns`,
+  ].join('\n')
+}
+
 function IntervalSelect({ value, onChange }: { value: Interval; onChange: (v: Interval) => void }) {
   return (
     <div className="host-interval">
@@ -160,36 +200,38 @@ export function ConnectorGuide({
           </p>
 
           <IntervalSelect value={interval} onChange={setIntervalValue} />
+          <p className="host-hint host-hint--block">
+            O script descobre o IP público no{' '}
+            <a href="https://www.ipify.org/" target="_blank" rel="noreferrer" className="host-inline-link">ipify</a>, então funciona
+            também atrás de CGNAT ou de outro roteador. Ele só chama a API quando o IP muda e registra cada execução no log do
+            RouterOS (prefixo <code>JUK.re DDNS</code>).
+          </p>
 
           <CodeBlock
-            title="RouterOS: só chama a API quando o IP da WAN muda"
+            title="RouterOS (terminal ou WinBox → New Terminal)"
             copyable={copyable}
-            code={[
-              '/system script add name=jukre-ddns source={',
-              '  :global jukreLastIp',
-              '  :local ip [/ip address get [find interface="pppoe-out1"] address]',
-              '  :set ip [:pick $ip 0 [:find $ip "/"]]',
-              '  :if ($ip != $jukreLastIp) do={',
-              `    /tool fetch url=("${ipv4Url}" . $ip) output=none`,
-              '    :set jukreLastIp $ip',
-              '  }',
-              '}',
-              `/system scheduler add name=jukre-ddns interval=${interval === 60 ? '1h' : `${interval}m`} on-event=jukre-ddns`,
-            ].join('\n')}
+            code={mikrotikScript(`${ipv4Url}" . $ip . "&format=text`, 'ipify', routerosInterval(interval))}
           />
-          <p className="host-hint">Troque <code>pppoe-out1</code> pela interface de internet do seu MikroTik.</p>
 
           <CodeBlock
-            title="Atrás de CGNAT (IP da WAN privado): descobre o IP público no ipify"
+            title="Rodar agora e ver o log"
             copyable={copyable}
-            code={[
-              '/system script add name=jukre-ddns source={',
-              '  :local ip ([/tool fetch url="https://api.ipify.org" output=user as-value]->"data")',
-              `  /tool fetch url=("${ipv4Url}" . $ip) output=none`,
-              '}',
-              `/system scheduler add name=jukre-ddns interval=${interval === 60 ? '1h' : `${interval}m`} on-event=jukre-ddns`,
-            ].join('\n')}
+            code={['/system script run jukre-ddns', '/log print where message~"JUK.re DDNS"'].join('\n')}
           />
+          <p className="host-hint">
+            No log aparece <code>updated &lt;ip&gt;</code>, <code>unchanged &lt;ip&gt;</code> ou <code>IP sem mudanca</code>. Se
+            aparecer <code>falha</code>, confira o token e o acesso do MikroTik à internet.
+          </p>
+
+          <CodeBlock
+            title="Alternativa: IP público direto na interface de internet (sem ipify)"
+            copyable={copyable}
+            code={mikrotikScript(`${ipv4Url}" . $ip . "&format=text`, 'wan', routerosInterval(interval))}
+          />
+          <p className="host-hint">
+            Só use esta se a interface de internet recebe um IP público. Troque <code>pppoe-out1</code> pela interface do seu
+            MikroTik.
+          </p>
         </>
       )}
 
@@ -219,6 +261,10 @@ export function ConnectorGuide({
             <FieldRow label="Usuário" value={fqdn} />
             <FieldRow label="Senha" value={tokenText} copyable={copyable} />
           </div>
+          <p className="host-hint">
+            Se o gateway estiver atrás de CGNAT ou de outro roteador, o UniFi manda o IP privado da WAN em <code>%i</code>. Tudo
+            bem: a API ignora IP privado e usa o IP público de onde a chamada saiu.
+          </p>
         </>
       )}
 
