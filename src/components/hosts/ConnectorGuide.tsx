@@ -130,13 +130,15 @@ export function ConnectorGuide({
           <IpifyHint />
 
           <CodeBlock
+            lang="bash"
             title="Linux / macOS (cron): IPv4"
             copyable={copyable}
             code={`${cronFor(interval)} curl -fsS "${ipv4Url}$(curl -fsS https://api.ipify.org)" >/dev/null`}
           />
 
           <CodeBlock
-            title="Windows (PowerShell): teste"
+            lang="powershell"
+            title="Windows: teste"
             copyable={copyable}
             code={[
               '$ip = Invoke-RestMethod "https://api.ipify.org"',
@@ -145,7 +147,8 @@ export function ConnectorGuide({
           />
 
           <CodeBlock
-            title={`Windows (PowerShell): agendar a cada ${interval} min`}
+            lang="powershell"
+            title={`Windows: agendar a cada ${interval} min`}
             copyable={copyable}
             code={[
               `$acao = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument '-NoProfile -Command "$ip = Invoke-RestMethod https://api.ipify.org; Invoke-RestMethod (''${ipv4Url}'' + $ip)"'`,
@@ -155,16 +158,17 @@ export function ConnectorGuide({
           />
 
           <CodeBlock
-            title="IPv6 (opcional): só se a sua rede tem IPv6 público"
+            lang="bash"
+            title="IPv6 (opcional), Linux / macOS: só se a sua rede tem IPv6 público"
             copyable={copyable}
-            code={[
-              '# Linux / macOS',
-              `curl -fsS "${ipv4Url}$(curl -fsS https://api6.ipify.org)"`,
-              '',
-              '# Windows (PowerShell)',
-              '$ip6 = Invoke-RestMethod "https://api6.ipify.org"',
-              `Invoke-RestMethod "${ipv4Url}$ip6"`,
-            ].join('\n')}
+            code={`curl -fsS "${ipv4Url}$(curl -fsS https://api6.ipify.org)"`}
+          />
+
+          <CodeBlock
+            lang="powershell"
+            title="IPv6 (opcional), Windows"
+            copyable={copyable}
+            code={['$ip6 = Invoke-RestMethod "https://api6.ipify.org"', `Invoke-RestMethod "${ipv4Url}$ip6"`].join('\n')}
           />
         </>
       )}
@@ -180,22 +184,31 @@ export function ConnectorGuide({
           </p>
 
           <CodeBlock
-            title="RouterOS (terminal ou WinBox → New Terminal)"
+            lang="routeros"
+            title="Terminal ou WinBox → New Terminal"
             copyable={copyable}
             code={mikrotikScript(`${ipv4Url}" . $ip . "&format=text`, 'ipify', routerosInterval(interval))}
           />
 
           <CodeBlock
+            lang="routeros"
             title="Rodar agora e ver o log"
             copyable={copyable}
-            code={['/system script run jukre-ddns', '/log print where message~"JUK.re DDNS"'].join('\n')}
+            code={[
+              '# apaga o último IP salvo, pra forçar uma chamada à API',
+              '/system script environment remove [find name="jukreLastIp"]',
+              '/system script run jukre-ddns',
+              '/log print where message~"JUK.re DDNS"',
+            ].join('\n')}
           />
           <p className="host-hint">
-            No log aparece <code>updated &lt;ip&gt;</code>, <code>unchanged &lt;ip&gt;</code> ou <code>IP sem mudanca</code>. Se
-            aparecer <code>falha</code>, confira o token e o acesso do MikroTik à internet.
+            No log aparece <code>updated &lt;ip&gt;</code> ou <code>unchanged &lt;ip&gt;</code>, e a chamada aparece no Log de
+            requisições do host. <code>IP sem mudanca</code> quer dizer que o script nem chamou a API, porque o IP é o
+            mesmo da última vez. Se aparecer <code>falha</code>, confira o token e o acesso do MikroTik à internet.
           </p>
 
           <CodeBlock
+            lang="routeros"
             title="Alternativa: IP público direto na interface de internet (sem ipify)"
             copyable={copyable}
             code={mikrotikScript(`${ipv4Url}" . $ip . "&format=text`, 'wan', routerosInterval(interval))}
@@ -246,6 +259,7 @@ export function ConnectorGuide({
             Em <code>/etc/ddclient.conf</code>. O <code>daemon=900</code> checa a cada 15 min e só atualiza quando o IP muda.
           </p>
           <CodeBlock
+            lang="ini"
             title="/etc/ddclient.conf"
             copyable={copyable}
             code={[

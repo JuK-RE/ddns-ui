@@ -5,12 +5,13 @@ import { formatDateTime, relativeTime } from '../../lib/time'
 import type { HostLogEntry, HostLogResult } from '../../types'
 import { Button } from '../../ui'
 
-// Log de requisições: as últimas 30 chamadas que o conector fez à API de
-// atualização (/v1/update e /nic/update). Serve pra confirmar que o
-// roteador/script está chamando a API e ver o que ela respondeu.
+// Log de requisições: as últimas 30 entradas do host, somando as chamadas do
+// conector à API de atualização (/v1/update e /nic/update) e as ações feitas
+// pelo painel (IP manual, pausar/ativar DDNS, token novo…). Serve pra
+// confirmar que o roteador/script está chamando a API e ver o que ela respondeu.
 // Chamadas com token inválido não aparecem (sem token não dá pra saber o host).
 
-const RESULT: Record<HostLogResult, { label: string; tone: 'ok' | 'neutral' | 'warn' | 'bad' }> = {
+const RESULT: Record<HostLogResult, { label: string; tone: 'ok' | 'neutral' | 'warn' | 'bad' | 'info' }> = {
   updated: { label: 'Atualizado', tone: 'ok' },
   unchanged: { label: 'Sem mudança', tone: 'neutral' },
   disabled: { label: 'DDNS pausado', tone: 'warn' },
@@ -18,11 +19,27 @@ const RESULT: Record<HostLogResult, { label: string; tone: 'ok' | 'neutral' | 'w
   nohost: { label: 'Hostname errado', tone: 'bad' },
   bad_ip: { label: 'IP inválido', tone: 'bad' },
   error: { label: 'Erro no DNS', tone: 'bad' },
+  created: { label: 'Host criado', tone: 'info' },
+  settings_updated: { label: 'Configurações', tone: 'info' },
+  manual_ip: { label: 'IP manual', tone: 'info' },
+  manual_ip_removed: { label: 'Registro removido', tone: 'warn' },
+  ddns_enabled: { label: 'DDNS ativado', tone: 'ok' },
+  ddns_disabled: { label: 'DDNS pausado', tone: 'warn' },
+  token_regenerated: { label: 'Token novo', tone: 'info' },
 }
 
-const SOURCE_LABEL: Record<string, string> = { v1: 'HTTP (v1)', dyndns2: 'dyndns2' }
+const SOURCE_LABEL: Record<string, string> = { v1: 'HTTP (v1)', dyndns2: 'dyndns2', panel: 'Painel' }
 
-export function HostRequestLog({ hostId, now }: { hostId: string; now: number }) {
+export function HostRequestLog({
+  hostId,
+  now,
+  refreshKey = 0,
+}: {
+  hostId: string
+  now: number
+  /** Mude o valor pra recarregar o log (ex.: depois de gerar um token novo). */
+  refreshKey?: number
+}) {
   const [logs, setLogs] = useState<HostLogEntry[] | null>(null)
   const [loading, setLoading] = useState(true)
   const [failed, setFailed] = useState(false)
@@ -31,22 +48,30 @@ export function HostRequestLog({ hostId, now }: { hostId: string; now: number })
 
   useEffect(() => {
     let cancelled = false
-    getLogs(hostId)
-      .then((list) => {
-        if (cancelled) return
-        setLogs(list)
-        setFailed(false)
-      })
-      .catch(() => {
-        if (cancelled) return
-        setFailed(true)
-        setLogs((prev) => prev ?? [])
-      })
-      .finally(() => !cancelled && setLoading(false))
+    // Depois de uma ação no painel, espera um pouco: o log é gravado logo
+    // após a resposta da API, então uma busca imediata pode chegar antes.
+    const timer = setTimeout(
+      () => {
+        getLogs(hostId)
+          .then((list) => {
+            if (cancelled) return
+            setLogs(list)
+            setFailed(false)
+          })
+          .catch(() => {
+            if (cancelled) return
+            setFailed(true)
+            setLogs((prev) => prev ?? [])
+          })
+          .finally(() => !cancelled && setLoading(false))
+      },
+      refreshKey > 0 ? 700 : 0
+    )
     return () => {
       cancelled = true
+      clearTimeout(timer)
     }
-  }, [hostId, reloadKey])
+  }, [hostId, reloadKey, refreshKey])
 
   function reload() {
     setLoading(true)
@@ -58,7 +83,7 @@ export function HostRequestLog({ hostId, now }: { hostId: string; now: number })
       <div className="host-section-head">
         <div>
           <h2>Log de requisições</h2>
-          <p className="host-lead">As últimas 30 chamadas que o seu aparelho fez à API, da mais recente para a mais antiga.</p>
+          <p className="host-lead">As últimas 30 chamadas do seu aparelho à API e as ações feitas aqui no painel, da mais recente para a mais antiga.</p>
         </div>
         <Button variant="outline" size="sm" onClick={reload} disabled={loading}>
           <RefreshCw size={14} className={loading ? 'host-spin' : ''} /> Atualizar
@@ -69,7 +94,7 @@ export function HostRequestLog({ hostId, now }: { hostId: string; now: number })
       {logs === null && <p className="host-muted">Carregando…</p>}
       {logs && logs.length === 0 && !failed && (
         <p className="host-muted">
-          Nenhuma chamada registrada ainda. Assim que o seu roteador ou script chamar a API, ela aparece aqui.
+          Nada registrado ainda. Assim que o seu roteador ou script chamar a API, a chamada aparece aqui.
         </p>
       )}
 

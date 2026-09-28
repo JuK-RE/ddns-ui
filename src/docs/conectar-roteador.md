@@ -10,7 +10,7 @@ Na hora de criar o host no painel, escolha o tipo do seu equipamento. O tutorial
 
 Abra o terminal do RouterOS (no WinBox, em **New Terminal**) e cole o script abaixo. Ele descobre o seu IP público pelo ipify, compara com o último que foi enviado e só chama a API quando o endereço muda. Como o IP vem de fora, funciona também atrás de CGNAT ou de outro roteador.
 
-```routeros RouterOS · terminal
+```routeros Terminal (ou WinBox → New Terminal)
 /system scheduler remove [find name="jukre-ddns"]
 /system script remove [find name="jukre-ddns"]
 /system script add name=jukre-ddns source={
@@ -33,9 +33,10 @@ Abra o terminal do RouterOS (no WinBox, em **New Terminal**) e cole o script aba
 
 As duas primeiras linhas apagam uma versão anterior do script, então você pode colar de novo por cima sempre que quiser trocar alguma coisa.
 
-Para testar na hora, sem esperar os 15 minutos:
+Para testar na hora, sem esperar os 15 minutos (a primeira linha apaga o último IP salvo, pra ele chamar a API de verdade):
 
-```routeros RouterOS · testar
+```routeros Rodar agora e ver o log
+/system script environment remove [find name="jukreLastIp"]
 /system script run jukre-ddns
 /log print where message~"JUK.re DDNS"
 ```
@@ -65,7 +66,7 @@ Em **Configurações → Internet → DNS Dinâmico**, crie uma entrada nova e e
 | Usuário | `clinicajuca.ip.juk.re` |
 | Senha | O token do host |
 
-Se o gateway estiver atrás de CGNAT ou de outro roteador, ele pode acabar enviando um IP privado, e a API recusa esse tipo de endereço. Nesse caso é melhor usar um script em outro aparelho da rede, como em [conectar um PC ou servidor](/docs/conectar-pc).
+Se o gateway estiver atrás de CGNAT ou de outro roteador, ele pode acabar enviando um IP privado. Não tem problema: nesse caso a API usa o IP público de onde a chamada saiu.
 
 ## ddclient (Linux e NAS)
 
@@ -87,6 +88,8 @@ Depois de salvar, reinicie o serviço (em muitas distribuições, `sudo systemct
 
 ## Como saber se está funcionando
 
-Abra o host no painel e desça até **Log de requisições**. Lá aparecem as últimas 30 chamadas que chegaram na API, com a hora, o IP e a resposta de cada uma. Se o seu roteador estiver configurado certinho, a primeira linha aparece logo depois do teste.
+Abra o host no painel e desça até **Log de requisições**. Lá aparecem as últimas 30 chamadas que chegaram na API, com a hora, o IP e a resposta de cada uma, junto com o que foi feito pelo painel (IP editado na mão, DDNS pausado, token novo). Se o seu roteador estiver configurado certinho, a primeira linha aparece logo depois do teste.
+
+No MikroTik, o script só chama a API quando o IP muda. Se no log do roteador aparecer `IP sem mudanca`, é o próprio script dizendo que não precisou chamar, então nada novo aparece no painel. Para forçar uma chamada, apague o último IP salvo e rode o script de novo: `/system script environment remove [find name="jukreLastIp"]`.
 
 Se nada aparecer, a chamada não chegou até a gente. Nesse caso, confira o endereço da URL e se o equipamento tem acesso à internet. Uma chamada com token errado também não aparece no log, porque sem o token certo não dá pra saber de qual host ela é.
