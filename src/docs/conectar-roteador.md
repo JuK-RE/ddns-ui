@@ -6,22 +6,37 @@ Roteadores e firewalls sabem quando o IP da internet muda, então só chamam a A
 
 ## MikroTik
 
-Crie um script e um agendador no RouterOS (terminal ou WinBox). O script compara o IP da interface de internet com o último enviado e só chama a API se mudou. Troque `pppoe-out1` pela sua interface:
+Cole no terminal do RouterOS (ou WinBox → New Terminal). O script descobre o IP público no ipify, então funciona também atrás de CGNAT, compara com o último enviado e só chama a API se mudou. Cada execução fica registrada no log do RouterOS:
 
 ```
+/system scheduler remove [find name="jukre-ddns"]
+/system script remove [find name="jukre-ddns"]
 /system script add name=jukre-ddns source={
   :global jukreLastIp
-  :local ip [/ip address get [find interface="pppoe-out1"] address]
-  :set ip [:pick $ip 0 [:find $ip "/"]]
-  :if ($ip != $jukreLastIp) do={
-    /tool fetch url=("https://gateway.juk.re/v1/update/SEU_TOKEN?myip=" . $ip) output=none
-    :set jukreLastIp $ip
+  :do {
+    :local ip ([/tool fetch url="https://api.ipify.org" output=user as-value]->"data")
+    :if ($ip = $jukreLastIp) do={
+      :log info ("JUK.re DDNS: IP sem mudanca (" . $ip . ")")
+    } else={
+      :local res ([/tool fetch url=("https://gateway.juk.re/v1/update/SEU_TOKEN?myip=" . $ip . "&format=text") output=user as-value]->"data")
+      :log info ("JUK.re DDNS: " . [:pick $res 0 [:find $res "\n"]])
+      :set jukreLastIp $ip
+    }
+  } on-error={
+    :log warning "JUK.re DDNS: falha ao atualizar (sem internet, token invalido ou limite de 5 min)"
   }
 }
 /system scheduler add name=jukre-ddns interval=15m on-event=jukre-ddns
 ```
 
-Atrás de CGNAT (o IP da interface é privado)? O tutorial do painel tem uma versão que descobre o IP público no ipify.
+As duas primeiras linhas removem uma versão anterior, então dá para colar de novo por cima. Para testar na hora e ver o resultado:
+
+```
+/system script run jukre-ddns
+/log print where message~"JUK.re DDNS"
+```
+
+Se a interface de internet recebe um IP público, o tutorial do painel também tem uma versão que lê o IP direto dela, sem o ipify.
 
 ## pfSense e OPNsense
 
@@ -42,6 +57,8 @@ Em **Configurações → Internet → DNS Dinâmico**, crie uma entrada **custom
 | Servidor | `gateway.juk.re/nic/update?hostname=%h&myip=%i` |
 | Hostname e usuário | O seu endereço, por exemplo `clinicajuca.ip.juk.re` |
 | Senha | O token do host |
+
+Atrás de CGNAT ou de outro roteador, o UniFi manda o IP privado da WAN. A API ignora IP privado e usa o IP público de onde a chamada saiu.
 
 ## ddclient (Linux e NAS)
 
