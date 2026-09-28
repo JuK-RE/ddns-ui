@@ -131,6 +131,34 @@ export function ConnectorGuide({
 
       {connector === 'mikrotik' && (
         <>
+          <p className="host-hint host-hint--block">
+            Antes de tudo, confira a hora do roteador: o <code>/tool fetch</code> valida o certificado HTTPS e, se o
+            relógio estiver errado (comum logo após ligar, antes do NTP sincronizar, ou sem bateria de RTC), a conexão
+            falha antes de chegar na API — geralmente como um erro genérico no log, sem indicar que é o relógio.
+          </p>
+
+          <CodeBlock
+            title="Verificar a hora e ativar o NTP, se preciso"
+            copyable={copyable}
+            code={[
+              '/system clock print',
+              '',
+              '# Hora errada? RouterOS 7:',
+              '/system ntp client set enabled=yes',
+              '/system ntp client servers add address=a.ntp.br',
+              '/system ntp client servers add address=pool.ntp.org',
+              '/system clock set time-zone-name=America/Sao_Paulo',
+              '',
+              '# RouterOS 6:',
+              '/system ntp client set enabled=yes primary-ntp=a.ntp.br secondary-ntp=pool.ntp.org',
+              '/system clock set time-zone-name=America/Sao_Paulo',
+            ].join('\n')}
+          />
+          <p className="host-hint">
+            Rode <code>/system clock print</code> de novo depois de alguns segundos: a hora deve estar certa e não
+            pode voltar a mudar sozinha. Uma vez ativado, o NTP fica ligado mesmo depois de reiniciar.
+          </p>
+
           <IntervalSelect value={interval} onChange={setIntervalValue} />
 
           <CodeBlock

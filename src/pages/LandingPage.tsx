@@ -46,9 +46,12 @@ type CompatItem = {
 
 // Logos soltas (sem o quadradinho) na cor oficial de cada marca.
 const compatList: CompatItem[] = [
-  { badge: SiMikrotik, label: 'MikroTik', color: '#293239' },
+  // MikroTik e pfSense: cor da marca é quase preta e some em cima do
+  // --cf-surface no tema escuro — usa tokens que clareiam só no dark
+  // (ver --brand-mikrotik/--brand-pfsense em index.css).
+  { badge: SiMikrotik, label: 'MikroTik', color: 'var(--brand-mikrotik)' },
   { badge: SiUbiquiti, label: 'UniFi', color: '#0559C9' },
-  { badge: SiPfsense, label: 'pfSense', color: '#212121' },
+  { badge: SiPfsense, label: 'pfSense', color: 'var(--brand-pfsense)' },
   { badge: SiTplink, label: 'TP-Link', color: '#4ACBD6' },
   { badge: FaWindows, label: 'Windows Server', color: '#0078D4' },
   { badge: SiUbuntu, label: 'Ubuntu', color: '#E95420' },

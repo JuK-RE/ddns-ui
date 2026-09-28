@@ -16,7 +16,7 @@
   place-items: center;
   padding: 56px 20px;
   /* pontinhos bem sutis ao fundo, como na referência */
-  background-image: radial-gradient(circle, #e6e6e6 1px, transparent 1.2px);
+  background-image: radial-gradient(circle, var(--cf-line) 1px, transparent 1.2px);
   background-size: 28px 28px;
   background-position: center;
 }
@@ -69,9 +69,9 @@
   margin: 14px 0 0;
   padding: 10px 12px;
   border-radius: 10px;
-  background: #fff1f0;
-  border: 1px solid #ffd2cf;
-  color: #b42318;
+  background: var(--status-danger-bg);
+  border: 1px solid var(--status-danger-border);
+  color: var(--status-danger-fg);
   font-size: 13px;
   line-height: 1.45;
   text-align: left;
