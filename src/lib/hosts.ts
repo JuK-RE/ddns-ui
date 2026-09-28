@@ -1,5 +1,5 @@
 import { api } from './api'
-import type { Availability, Connector, Host, HostHistoryEntry, HostStatus, Zone } from '../types'
+import type { Availability, Connector, Host, HostHistoryEntry, HostLogEntry, HostStatus, Zone } from '../types'
 
 // Chamadas do painel de hosts. Tudo pelo `api` (axios em /api, com o cookie
 // de sessão). O token do host só existe na resposta de createHost/regenerateToken
@@ -64,6 +64,12 @@ export async function deleteHost(id: string): Promise<{ available_at: string }> 
 export async function getHistory(id: string, limit = 50): Promise<HostHistoryEntry[]> {
   const { data } = await api.get<{ history: HostHistoryEntry[] }>(`/hosts/${id}/history`, { params: { limit } })
   return data.history
+}
+
+/** Últimas 30 chamadas do conector à API de atualização. */
+export async function getLogs(id: string): Promise<HostLogEntry[]> {
+  const { data } = await api.get<{ logs: HostLogEntry[] }>(`/hosts/${id}/logs`)
+  return data.logs
 }
 
 /** Mensagem de erro (e código, se houver) de uma resposta da API. */

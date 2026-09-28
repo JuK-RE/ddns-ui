@@ -1,6 +1,7 @@
 import { Fragment, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { CodeBlock } from '../components/hosts/CodeBlock'
+import { CopyButton } from '../components/hosts/CopyButton'
 import type { Block } from './markdown'
 
 // Links: "/rota" vira <Link>; http(s)/mailto abrem em outra aba; qualquer outra
@@ -24,6 +25,32 @@ function renderInline(text: string): ReactNode[] {
     }
     return <Fragment key={i}>{part}</Fragment>
   })
+}
+
+// Nome bonito da linguagem, pro cabeçalho do bloco de código quando o .md
+// não dá um título (```routeros → "RouterOS").
+const LANG_LABEL: Record<string, string> = {
+  routeros: 'RouterOS',
+  bash: 'Terminal',
+  sh: 'Terminal',
+  shell: 'Terminal',
+  powershell: 'PowerShell',
+  ps1: 'PowerShell',
+  ini: 'Configuração',
+  conf: 'Configuração',
+  json: 'JSON',
+}
+
+// Célula de tabela que é só um `código` (URL, usuário…) ganha botão de copiar.
+function renderCell(text: string): ReactNode {
+  const only = text.match(/^`([^`]+)`$/)
+  if (!only) return renderInline(text)
+  return (
+    <span className="docs-copy-cell">
+      <code>{only[1]}</code>
+      <CopyButton text={only[1]} label="Copiar valor" />
+    </span>
+  )
 }
 
 // Só imagens do próprio site ou https.
@@ -55,7 +82,14 @@ export function Markdown({ blocks }: { blocks: Block[] }) {
             )
           }
           case 'code':
-            return <CodeBlock key={i} code={b.code} title={b.lang || undefined} />
+            return (
+              <CodeBlock
+                key={i}
+                code={b.code}
+                title={b.title || LANG_LABEL[b.lang] || b.lang || 'Código'}
+                labeledCopy
+              />
+            )
           case 'quote':
             return <blockquote key={i}>{renderInline(b.text)}</blockquote>
           case 'image':
@@ -80,7 +114,7 @@ export function Markdown({ blocks }: { blocks: Block[] }) {
                     {b.rows.map((row, r) => (
                       <tr key={r}>
                         {row.map((cell, c) => (
-                          <td key={c}>{renderInline(cell)}</td>
+                          <td key={c}>{renderCell(cell)}</td>
                         ))}
                       </tr>
                     ))}

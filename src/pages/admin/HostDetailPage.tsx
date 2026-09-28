@@ -5,6 +5,7 @@ import { ConfirmModal } from '../../components/hosts/ConfirmModal'
 import { ConnectorGuide } from '../../components/hosts/ConnectorGuide'
 import { ConnectorPicker } from '../../components/hosts/ConnectorPicker'
 import { CopyButton } from '../../components/hosts/CopyButton'
+import { HostRequestLog } from '../../components/hosts/HostRequestLog'
 import { HostStatusBadge } from '../../components/hosts/HostStatusBadge'
 import { TokenReveal } from '../../components/hosts/TokenReveal'
 import { CONNECTOR_LABEL, apiError, deleteHost, getHistory, getHost, hostStatus, regenerateToken, updateHost } from '../../lib/hosts'
@@ -240,6 +241,8 @@ export function HostDetailPage() {
           </div>
         )}
       </section>
+
+      <HostRequestLog hostId={host.id} now={now} />
 
       <section className="admin-card">
         <h2>Configurações</h2>

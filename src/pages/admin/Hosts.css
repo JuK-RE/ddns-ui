@@ -1096,3 +1096,89 @@
   display: block;
   margin: 8px 0 4px;
 }
+
+/* ───────────── Log de requisições (detalhe do host) ───────────── */
+.host-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.host-section-head .host-lead {
+  margin-bottom: 16px;
+}
+
+.host-section-head > .ui-btn {
+  flex-shrink: 0;
+}
+
+.host-log-table td {
+  vertical-align: top;
+}
+
+.host-log-when {
+  display: block;
+  color: var(--text-h);
+}
+
+.host-log-sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--cf-ink-soft);
+}
+
+.host-log-detail {
+  max-width: 280px;
+}
+
+.host-log-detail span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.host-log-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.host-log-badge--ok {
+  background: var(--status-success-bg);
+  border-color: var(--status-success-border);
+  color: var(--status-success-fg);
+}
+
+.host-log-badge--neutral {
+  background: var(--status-neutral-bg);
+  color: var(--status-neutral-fg);
+}
+
+.host-log-badge--warn {
+  background: var(--status-warning-bg);
+  border-color: var(--status-warning-border);
+  color: var(--status-warning-fg);
+}
+
+.host-log-badge--bad {
+  background: var(--status-danger-bg);
+  border-color: var(--status-danger-border);
+  color: var(--status-danger-fg);
+}
+
+@media (max-width: 640px) {
+  .host-section-head {
+    flex-direction: column;
+    gap: 0;
+  }
+  .host-section-head > .ui-btn {
+    margin-bottom: 14px;
+  }
+}

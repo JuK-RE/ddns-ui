@@ -322,15 +322,111 @@
   border-bottom: 0;
 }
 
-/* CodeBlock (mesmo do painel) dentro dos docs */
-.docs-article .host-code {
-  margin: 14px 0 18px;
+/* CodeBlock (o mesmo do painel) dentro dos docs. O painel define as cores
+   em .admin-shell, que não existe aqui: por isso os tokens abaixo. */
+.docs-shell {
+  --admin-line: var(--docs-line);
+  --admin-hover: var(--cf-surface-hover);
 }
 
-.docs-article .host-code code {
+.docs-article .host-code {
+  margin: 16px 0 20px;
+  border: 1px solid var(--docs-line);
+  border-radius: 10px;
+  background: var(--cf-surface);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.docs-article .host-code-head {
+  min-height: 38px;
+  padding: 5px 6px 5px 14px;
+  border-bottom: 1px solid var(--docs-line);
+  background: var(--cf-surface-soft);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  color: var(--cf-ink-tab);
+}
+
+.docs-article .host-code-head > span:first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* bolinha de "terminal" antes do título */
+.docs-article .host-code-head > span:first-child::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0.8;
+}
+
+.docs-article .host-code pre {
+  padding: 14px 16px;
+  background: var(--code-bg);
+}
+
+.docs-article .host-code pre code {
+  display: block;
   padding: 0;
   border: 0;
   background: transparent;
+  font-size: 13px;
+  line-height: 1.7;
+  white-space: pre;
+}
+
+/* Botão "Copiar" com texto (CopyButton showLabel) */
+.host-copy.host-copy--labeled {
+  width: auto;
+  gap: 6px;
+  padding: 0 10px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--docs-line, var(--cf-line));
+  border-radius: 7px;
+  background: var(--cf-surface);
+  font-family: inherit;
+  font-size: 12.5px;
+  letter-spacing: 0;
+  color: var(--text-h);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.host-copy.host-copy--labeled:hover {
+  border-color: var(--cf-line-pill);
+  background: var(--cf-surface-hover);
+}
+
+.host-copy.host-copy--labeled.is-copied {
+  border-color: var(--status-success-border);
+  background: var(--status-success-bg);
+  color: var(--status-success-fg);
+}
+
+/* Célula de tabela com um valor copiável (URL, usuário…) */
+.docs-copy-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+}
+
+.docs-copy-cell code {
+  word-break: break-all;
+}
+
+.docs-copy-cell .host-copy {
+  opacity: 0.7;
+}
+
+.docs-copy-cell .host-copy:hover,
+.docs-copy-cell .host-copy.is-copied {
+  opacity: 1;
 }
 
 /* Anterior / próxima */

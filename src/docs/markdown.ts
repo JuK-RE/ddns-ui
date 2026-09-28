@@ -2,7 +2,8 @@
 // Gera uma lista de blocos que o <Markdown /> renderiza como elementos React
 // — nunca HTML cru, então o conteúdo dos .md não injeta nada na página.
 //
-// Suporta: # títulos (1–3), parágrafos, listas (- e 1.), blocos ``` de código,
+// Suporta: # títulos (1–3), parágrafos, listas (- e 1.), blocos ``` de código
+// (```lang Título opcional → o título aparece no cabeçalho do bloco),
 // > citações, tabelas |a|b|, imagens ![alt](src) em linha própria, --- e, no
 // texto: `código`, **negrito**, *itálico* e [links](url).
 
@@ -10,7 +11,7 @@ export type Block =
   | { type: 'heading'; level: 1 | 2 | 3; text: string; id: string }
   | { type: 'paragraph'; text: string }
   | { type: 'list'; ordered: boolean; items: string[] }
-  | { type: 'code'; lang: string; code: string }
+  | { type: 'code'; lang: string; title: string; code: string }
   | { type: 'quote'; text: string }
   | { type: 'image'; alt: string; src: string }
   | { type: 'table'; head: string[]; rows: string[][] }
@@ -50,13 +51,13 @@ export function parseMarkdown(source: string): Block[] {
     }
 
     // bloco de código
-    const fence = line.match(/^```(\w*)\s*$/)
+    const fence = line.match(/^```([\w-]*)[ \t]*(.*?)\s*$/)
     if (fence) {
       const code: string[] = []
       i++
       while (i < lines.length && !/^```\s*$/.test(lines[i])) code.push(lines[i++])
       i++ // fecha a cerca
-      blocks.push({ type: 'code', lang: fence[1], code: code.join('\n') })
+      blocks.push({ type: 'code', lang: fence[1], title: fence[2], code: code.join('\n') })
       continue
     }
 
