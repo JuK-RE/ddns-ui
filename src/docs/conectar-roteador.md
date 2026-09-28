@@ -8,37 +8,22 @@ Roteadores e firewalls sabem quando o IP da internet muda, então só chamam a A
 
 Cole no terminal do RouterOS (ou WinBox → New Terminal). O script compara o IP da interface de internet com o último enviado e só chama a API se mudou. Troque `pppoe-out1` pela sua interface:
 
-> O RouterBoard precisa ter acesso à internet e a hora do sistema certa. Sem isso, o `/tool fetch` por HTTPS falha na validação do certificado (confira em **System → Clock**, e configure um **NTP Client** se precisar).
+> Vale a pena manter o RouterOS atualizado e com a hora certinha — ajuda bastante a garantir que tudo funcione bem. Sem isso, o `/tool fetch` por HTTPS pode falhar (a validação do certificado depende da hora certa, e uma versão muito antiga do RouterOS também pode dar problema com TLS). Dá pra conferir a versão em **System → Package** e atualizar se houver uma nova, e ajustar a hora em **System → Clock** (configure um **NTP Client** se precisar).
 
 ```
-/system scheduler remove [find name="jukre-ddns"]
-/system script remove [find name="jukre-ddns"]
 /system script add name=jukre-ddns source={
   :global jukreLastIp
-  :do {
-    :local ip ([/tool fetch url="https://api.ipify.org" output=user as-value]->"data")
-    :if ($ip = $jukreLastIp) do={
-      :log info ("JUK.re DDNS: IP sem mudanca (" . $ip . ")")
-    } else={
-      :local res ([/tool fetch url=("https://gateway.juk.re/v1/update/SEU_TOKEN?myip=" . $ip . "&format=text") output=user as-value]->"data")
-      :log info ("JUK.re DDNS: " . [:pick $res 0 [:find $res "\n"]])
-      :set jukreLastIp $ip
-    }
-  } on-error={
-    :log warning "JUK.re DDNS: falha ao atualizar (sem internet, token invalido ou limite de 5 min)"
+  :local ip [/ip address get [find interface="pppoe-out1"] address]
+  :set ip [:pick $ip 0 [:find $ip "/"]]
+  :if ($ip != $jukreLastIp) do={
+    /tool fetch url=("https://gateway.juk.re/v1/update/SEU_TOKEN?myip=" . $ip) output=none
+    :set jukreLastIp $ip
   }
 }
 /system scheduler add name=jukre-ddns interval=15m on-event=jukre-ddns
 ```
 
-As duas primeiras linhas removem uma versão anterior, então dá para colar de novo por cima. Para testar na hora e ver o resultado:
-
-```
-/system script run jukre-ddns
-/log print where message~"JUK.re DDNS"
-```
-
-Se a interface de internet recebe um IP público, o tutorial do painel também tem uma versão que lê o IP direto dela, sem o ipify.
+Atrás de CGNAT (o IP da interface é privado)? O tutorial do painel tem uma versão que descobre o IP público no ipify.
 
 ## pfSense e OPNsense
 
@@ -59,8 +44,6 @@ Em **Configurações → Internet → DNS Dinâmico**, crie uma entrada **custom
 | Servidor | `gateway.juk.re/nic/update?hostname=%h&myip=%i` |
 | Hostname e usuário | O seu endereço, por exemplo `clinicajuca.ip.juk.re` |
 | Senha | O token do host |
-
-Atrás de CGNAT ou de outro roteador, o UniFi manda o IP privado da WAN. A API ignora IP privado e usa o IP público de onde a chamada saiu.
 
 ## ddclient (Linux e NAS)
 

@@ -301,7 +301,7 @@
   }
 
   /* No celular o status desce pra uma linha própria, centralizado,
-     abaixo do © e do GitHub. */
+     abaixo do ©. */
   .ui-site-footer-status {
     order: 3;
     flex-basis: 100%;
@@ -310,6 +310,7 @@
     padding-top: 12px;
     border-top: 1px solid var(--cf-line);
   }
+
 }
 
 /* ── Links dentro de texto (RichText) ── */
