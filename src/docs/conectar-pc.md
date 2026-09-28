@@ -47,4 +47,4 @@ curl -fsS "https://gateway.juk.re/v1/update/SEU_TOKEN?myip=$(curl -fsS https://a
 | `rate_limited` | Chamadas com menos de 5 minutos de intervalo. Espere e tente de novo. |
 | `unauthorized` | Token inválido. Confira se copiou inteiro ou gere um novo. |
 | `disabled` | O DDNS está pausado para este host. Veja [DNS, IPv6 e DDNS pausado](/docs/dns-ipv6). |
-| `bad_ip` | O IP informado é inválido ou privado. |
+| `bad_ip` | O IP informado é inválido. (IP privado é trocado pelo IP público de onde a chamada saiu; só dá erro se não houver um da mesma família.) |
