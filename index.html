@@ -4,6 +4,25 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+    <!-- Aplica o tema (claro/escuro/sistema) antes do primeiro paint, pra
+         não piscar o tema errado enquanto o React ainda não montou. Mantido
+         em sincronia com src/theme/theme-context.tsx (mesma chave e mesma
+         regra de resolução do 'system'). -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('ddns_theme')
+          var theme =
+            stored === 'light' || stored === 'dark'
+              ? stored
+              : window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light'
+          document.documentElement.setAttribute('data-theme', theme)
+        } catch (e) {}
+      })()
+    </script>
+
     <!-- SEO: valores fixos de propósito. Robôs que não executam JavaScript
          (WhatsApp, LinkedIn, X, Slack…) só enxergam este HTML, então tudo
          que importa pra busca e compartilhamento já sai pronto aqui.

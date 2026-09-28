@@ -73,7 +73,7 @@
 
 .ui-btn--outline:hover:not(:disabled) {
   background: var(--cf-surface-hover);
-  border-color: #c8c8c8;
+  border-color: var(--cf-line-pill);
 }
 
 .ui-btn--ghost {
@@ -97,13 +97,13 @@
 }
 
 .ui-btn--danger {
-  color: #b42318;
+  color: var(--status-danger-fg);
 }
 
 .ui-btn--danger:hover:not(:disabled) {
-  border-color: #f1c4c0;
-  background: #fff5f4;
-  color: #b42318;
+  border-color: var(--status-danger-border);
+  background: var(--status-danger-bg);
+  color: var(--status-danger-fg);
 }
 
 /* Bloco: largura total, cantos de 10px e ícone preso à esquerda com o
@@ -266,6 +266,12 @@
   padding: 20px 40px;
   font-size: 13px;
   color: var(--cf-ink-soft);
+}
+
+.ui-site-footer-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
 }
 
 .ui-site-footer-link {

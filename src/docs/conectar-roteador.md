@@ -6,7 +6,9 @@ Roteadores e firewalls sabem quando o IP da internet muda, então só chamam a A
 
 ## MikroTik
 
-Cole no terminal do RouterOS (ou WinBox → New Terminal). O script descobre o IP público no ipify, então funciona também atrás de CGNAT, compara com o último enviado e só chama a API se mudou. Cada execução fica registrada no log do RouterOS:
+Cole no terminal do RouterOS (ou WinBox → New Terminal). O script compara o IP da interface de internet com o último enviado e só chama a API se mudou. Troque `pppoe-out1` pela sua interface:
+
+> O RouterBoard precisa ter acesso à internet e a hora do sistema certa. Sem isso, o `/tool fetch` por HTTPS falha na validação do certificado (confira em **System → Clock**, e configure um **NTP Client** se precisar).
 
 ```
 /system scheduler remove [find name="jukre-ddns"]

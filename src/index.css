@@ -18,6 +18,10 @@
   --cf-line: #dedede;
   --cf-line-pill: #d6d6d6;
   --cf-line-dashed: #d8d8d8;
+  --cf-surface-active: #ececec;
+  --cf-ink-dimmer: #a3a3a3;
+  --cf-ink-faint-warm: #6a6a64;
+  --cf-line-dashed-soft: #e4e4e4;
   --cf-orange: #f6821f;
   --cf-orange-dark: #da5b16;
   --cf-orange-tint: #fff5eb;
@@ -26,12 +30,35 @@
   --cf-cta-hover: #f04f10;
   --cf-cta-fg: #fff;
   --cf-focus-cta: rgba(255, 94, 31, 0.28);
+  --cf-focus-ring-ink: rgba(0, 0, 0, 0.14);
+  --cf-status-live: #16a34a;
+  --cf-status-live-glow: rgba(22, 163, 74, 0.14);
+  /* Logos de marca que são quase pretas (MikroTik, pfSense) somem no tema
+     escuro em cima do --cf-surface — clareamos só essas duas no dark. */
+  --brand-mikrotik: #293239;
+  --brand-pfsense: #212121;
   /* usados pelo StatusBadge */
   --hairline-strong: #c8c8c8;
   --mute: var(--cf-ink-soft);
   --cf-shadow: 0 1px 2px rgba(29, 29, 27, 0.04), 0 18px 44px -18px rgba(29, 29, 27, 0.18);
   --cf-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --cf-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Pílulas de status (host-status, avisos, badges) — mesmo par bg/fg
+     reaproveitado em várias telas, com equivalente escuro definido abaixo. */
+  --status-success-bg: #e6f6ec;
+  --status-success-fg: #16794a;
+  --status-success-border: #b7e2c8;
+  --status-warning-bg: #fdf3d8;
+  --status-warning-fg: #9a6700;
+  --status-warning-border: #f4dba0;
+  --status-danger-bg: #fdeceb;
+  --status-danger-fg: #b42318;
+  --status-danger-border: #f0c7c2;
+  --status-info-bg: #eef0fb;
+  --status-info-fg: #3f4bb0;
+  --status-neutral-bg: #f0f0f0;
+  --status-neutral-fg: #666;
 
   /* Aliases antigos (usados em App.css e no painel) apontando pros tokens */
   --text: var(--cf-ink-muted);
@@ -62,6 +89,71 @@
   @media (max-width: 1024px) {
     font-size: 16px;
   }
+}
+
+/* ── Tema escuro ──
+   Ativado via [data-theme="dark"] na <html> (ver src/theme/theme-context.tsx).
+   Sobrescreve só os tokens — quem usa var(--cf-*) ou os aliases (--text,
+   --bg, --border…) muda de cor sozinho, sem precisar de regra própria. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --cf-surface: oklch(0.155 0.011 285);
+  --cf-surface-soft: oklch(0.125 0.01 285);
+  --cf-surface-hover: oklch(0.205 0.014 285);
+  --cf-surface-active: oklch(0.185 0.013 285);
+
+  --cf-ink-strong: oklch(0.96 0.006 285);
+  --cf-ink: oklch(0.92 0.01 285);
+  --cf-ink-muted: oklch(0.72 0.018 285);
+  --cf-ink-tab: oklch(0.7 0.018 285);
+  --cf-ink-soft: oklch(0.64 0.02 285);
+  --cf-ink-dim: oklch(0.58 0.022 285);
+  --cf-ink-dimmer: oklch(0.55 0.022 285);
+  --cf-ink-dimmest: oklch(0.52 0.022 285);
+  --cf-ink-warm: oklch(0.9 0.01 285);
+  --cf-ink-muted-warm: oklch(0.72 0.018 285);
+  --cf-ink-soft-warm: oklch(0.7 0.018 285);
+  --cf-ink-faint-warm: oklch(0.66 0.02 285);
+
+  --cf-line: oklch(0.3 0.018 285);
+  --cf-line-pill: oklch(0.36 0.02 285);
+  --cf-line-dashed: oklch(0.32 0.018 285);
+  --cf-line-dashed-soft: oklch(0.28 0.016 285);
+
+  --cf-orange-dark: #ff8a5c;
+  --cf-orange-tint: rgba(255, 138, 92, 0.14);
+  --cf-orange-tint-line: rgba(255, 138, 92, 0.32);
+
+  --cf-focus-ring-ink: rgba(255, 255, 255, 0.22);
+  --cf-focus-cta: rgba(255, 94, 31, 0.38);
+
+  --hairline-strong: var(--cf-line-pill);
+  --cf-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 18px 44px -18px rgba(0, 0, 0, 0.55);
+
+  --cf-status-live: oklch(0.792 0.209 151.711);
+  --cf-status-live-glow: oklch(0.792 0.209 151.711 / 0.14);
+
+  --status-success-bg: rgba(74, 222, 128, 0.14);
+  --status-success-fg: #4ade80;
+  --status-success-border: rgba(74, 222, 128, 0.32);
+  --status-warning-bg: rgba(251, 191, 36, 0.14);
+  --status-warning-fg: #fbbf24;
+  --status-warning-border: rgba(251, 191, 36, 0.32);
+  --status-danger-bg: rgba(248, 113, 113, 0.14);
+  --status-danger-fg: #f87171;
+  --status-danger-border: rgba(248, 113, 113, 0.32);
+  --status-info-bg: rgba(96, 165, 250, 0.16);
+  --status-info-fg: #93c5fd;
+  --status-neutral-bg: var(--cf-surface-hover);
+  --status-neutral-fg: var(--cf-ink-soft);
+
+  --code-bg: var(--cf-surface-hover);
+  --accent-bg: rgba(255, 138, 92, 0.16);
+  --accent-border: rgba(255, 138, 92, 0.5);
+
+  --brand-mikrotik: #b6c4cc;
+  --brand-pfsense: #d6d6d6;
 }
 
 #root {

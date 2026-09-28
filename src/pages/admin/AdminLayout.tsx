@@ -5,6 +5,7 @@ import { useAuth } from '../../auth/AuthContext'
 import { getAvatarUrl } from '../../lib/avatar'
 import { BrandLockup, ORG_URL, SUPPORT_URL } from '../../ui'
 import { StatusBadge } from '../../components/StatusBadge'
+import { ThemeToggle } from '../../theme/ThemeToggle'
 import { filterNav } from './nav'
 import '../../App.css'
 import './Admin.css'
@@ -243,6 +244,7 @@ export function AdminLayout() {
             <a href={ORG_URL} target="_blank" rel="noreferrer">GitHub</a>
             <Link to="/home">Site</Link>
           </nav>
+          <ThemeToggle />
           <StatusBadge />
           <span>© 2026 JUK.re DDNS</span>
         </footer>

@@ -23,7 +23,7 @@
 }
 
 .host-input::placeholder {
-  color: #aaa;
+  color: var(--cf-ink-dimmest);
 }
 
 .host-input--inline {
@@ -70,18 +70,18 @@
 
 .host-btn-danger,
 .host-btn-danger:hover {
-  background: #b42318;
-  border-color: #b42318;
+  background: var(--status-danger-fg);
+  border-color: var(--status-danger-fg);
   color: #fff;
 }
 
 .host-btn-danger-outline {
-  color: #b42318;
-  border-color: #f0c7c2;
+  color: var(--status-danger-fg);
+  border-color: var(--status-danger-border);
 }
 
 .host-btn-danger-outline:hover {
-  background: #fef3f2;
+  background: var(--status-danger-bg);
 }
 
 .host-counter {
@@ -126,7 +126,7 @@
   border: 1px solid var(--admin-line);
   border-radius: 8px;
   background: var(--admin-surface);
-  color: #888;
+  color: var(--cf-ink-soft);
 }
 
 .host-search:focus-within {
@@ -206,7 +206,7 @@
 }
 
 .host-table tr.is-clickable:hover td {
-  background: #fafafa;
+  background: var(--cf-surface-soft);
 }
 
 .host-table code,
@@ -227,7 +227,7 @@
   font-weight: 500;
   color: var(--text-h);
   text-decoration: underline;
-  text-decoration-color: #ccc;
+  text-decoration-color: var(--cf-line-pill);
   text-underline-offset: 3px;
 }
 
@@ -252,7 +252,7 @@
 }
 
 .host-muted {
-  color: #8a8a8a;
+  color: var(--cf-ink-soft);
 }
 
 .host-no-results {
@@ -262,7 +262,7 @@
 
 .host-actions-cell {
   width: 32px;
-  color: #aaa;
+  color: var(--cf-ink-dimmest);
   text-align: right;
 }
 
@@ -277,7 +277,7 @@
 .host-showing {
   margin-top: 10px;
   font-size: 13px;
-  color: #8a8a8a;
+  color: var(--cf-ink-soft);
 }
 
 .host-empty {
@@ -331,23 +331,23 @@
 }
 
 .host-status--online {
-  background: #e6f6ec;
-  color: #16794a;
+  background: var(--status-success-bg);
+  color: var(--status-success-fg);
 }
 
 .host-status--stale {
-  background: #fdf3d8;
-  color: #9a6700;
+  background: var(--status-warning-bg);
+  color: var(--status-warning-fg);
 }
 
 .host-status--offline {
-  background: #fdeceb;
-  color: #b42318;
+  background: var(--status-danger-bg);
+  color: var(--status-danger-fg);
 }
 
 .host-status--pending {
-  background: #f0f0f0;
-  color: #666;
+  background: var(--status-neutral-bg);
+  color: var(--status-neutral-fg);
 }
 
 /* Casos de uso (abaixo da tabela) */
@@ -402,12 +402,12 @@
 
 .host-usecase small {
   font-size: 12.5px;
-  color: #777;
+  color: var(--cf-ink-tab);
   line-height: 1.45;
 }
 
 .host-usecase:hover {
-  border-color: #cfcfcf;
+  border-color: var(--cf-line-pill);
 }
 
 /* ── Criação ── */
@@ -423,7 +423,7 @@
   margin: 0 0 16px;
   padding: 0;
   font-size: 13px;
-  color: #999;
+  color: var(--cf-ink-dim);
   flex-wrap: wrap;
 }
 
@@ -457,9 +457,9 @@
 }
 
 .host-steps li.is-done .host-step-num {
-  background: #e6f6ec;
-  border-color: #b7e2c8;
-  color: #16794a;
+  background: var(--status-success-bg);
+  border-color: var(--status-success-border);
+  color: var(--status-success-fg);
 }
 
 .host-wizard-card {
@@ -514,7 +514,7 @@
   gap: 6px;
   margin: 0;
   font-size: 12.5px;
-  color: #8a8a8a;
+  color: var(--cf-ink-soft);
   line-height: 1.5;
 }
 
@@ -526,12 +526,12 @@
 }
 
 .host-hint--ok {
-  color: #16794a;
+  color: var(--status-success-fg);
 }
 
 .host-hint--error,
 .host-error {
-  color: #b42318;
+  color: var(--status-danger-fg);
 }
 
 .host-error {
@@ -545,10 +545,10 @@
   align-items: flex-start;
   margin: 12px 0 0;
   padding: 10px 12px;
-  border: 1px solid #f4dba0;
+  border: 1px solid var(--status-warning-border);
   border-radius: 8px;
-  background: #fdf7e3;
-  color: #7a5200;
+  background: var(--status-warning-bg);
+  color: var(--status-warning-fg);
   font-size: 13px;
 }
 
@@ -565,9 +565,9 @@
   padding: 10px 12px;
   border: 1px dashed var(--admin-line);
   border-radius: 8px;
-  background: #fafafa;
+  background: var(--cf-surface-soft);
   font-size: 12.5px;
-  color: #8a8a8a;
+  color: var(--cf-ink-soft);
 }
 
 .host-preview code {
@@ -618,7 +618,7 @@
 }
 
 .host-connector:hover:not(:disabled) {
-  border-color: #cfcfcf;
+  border-color: var(--cf-line-pill);
 }
 
 .host-connector.is-selected {
@@ -664,12 +664,12 @@
   padding: 1px 6px;
   border: 1px solid var(--admin-line);
   border-radius: 4px;
-  color: #777;
+  color: var(--cf-ink-tab);
 }
 
 .host-connector-text span {
   font-size: 12.5px;
-  color: #777;
+  color: var(--cf-ink-tab);
   line-height: 1.4;
 }
 
@@ -697,7 +697,7 @@
   padding: 8px 8px 8px 12px;
   border: 1px solid var(--cf-orange-tint-line);
   border-radius: 8px;
-  background: #fff;
+  background: var(--cf-surface);
 }
 
 .host-token-value code {
@@ -710,7 +710,7 @@
   align-items: flex-start;
   margin: 10px 0 0;
   font-size: 12.5px;
-  color: #7a4a00;
+  color: var(--status-warning-fg);
 }
 
 .host-token-warn svg {
@@ -729,7 +729,7 @@
   border: 0;
   border-radius: 6px;
   background: transparent;
-  color: #888;
+  color: var(--cf-ink-soft);
   cursor: pointer;
 }
 
@@ -739,14 +739,14 @@
 }
 
 .host-copy.is-copied {
-  color: #16794a;
+  color: var(--status-success-fg);
 }
 
 .host-code {
   margin-top: 12px;
   border: 1px solid var(--admin-line);
   border-radius: 8px;
-  background: #fcfcfa;
+  background: var(--code-bg);
   overflow: hidden;
 }
 
@@ -757,9 +757,9 @@
   gap: 8px;
   padding: 4px 6px 4px 12px;
   border-bottom: 1px solid var(--admin-line);
-  background: #f6f6f3;
+  background: var(--cf-surface-hover);
   font-size: 12px;
-  color: #777;
+  color: var(--cf-ink-tab);
   min-height: 30px;
 }
 
@@ -821,7 +821,7 @@
 
 .host-field-label {
   font-size: 13px;
-  color: #777;
+  color: var(--cf-ink-tab);
 }
 
 @media (max-width: 560px) {
@@ -840,7 +840,7 @@
   gap: 6px;
   margin: -8px 0 14px;
   font-size: 13px;
-  color: #777;
+  color: var(--cf-ink-tab);
   text-decoration: none;
 }
 
@@ -890,7 +890,7 @@
   max-width: 460px;
   padding: 24px;
   border-radius: 14px;
-  background: #fff;
+  background: var(--cf-surface);
   box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.35);
 }
 
@@ -922,8 +922,8 @@
 
 /* ── IPv6, DNS e DDNS ativo/inativo ── */
 .host-status--paused {
-  background: #eef0fb;
-  color: #3f4bb0;
+  background: var(--status-info-bg);
+  color: var(--status-info-fg);
 }
 
 .host-ipv6 {
@@ -931,7 +931,7 @@
   max-width: 190px;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: #666 !important;
+  color: var(--cf-ink-muted) !important;
 }
 
 .host-stat-v6 {
@@ -952,7 +952,7 @@
   font-size: 13px;
   color: var(--text-h);
   text-decoration: underline;
-  text-decoration-color: #ccc;
+  text-decoration-color: var(--cf-line-pill);
   text-underline-offset: 3px;
 }
 
@@ -973,7 +973,7 @@
 .host-notice--info svg {
   flex-shrink: 0;
   margin-top: 3px;
-  color: #777;
+  color: var(--cf-ink-tab);
 }
 
 .host-switch {
@@ -984,7 +984,7 @@
   padding: 0;
   border: 0;
   border-radius: 999px;
-  background: #cfcfcf;
+  background: var(--cf-line-pill);
   cursor: pointer;
   transition: background 0.15s ease;
 }
@@ -1045,7 +1045,7 @@
 }
 
 .host-dns-table tr.is-open td {
-  background: #fafafa;
+  background: var(--cf-surface-soft);
 }
 
 .host-dns-table td.host-actions-cell {
@@ -1055,7 +1055,7 @@
 .host-dns-edit td {
   white-space: normal !important;
   padding: 16px !important;
-  background: #f7f7f5;
+  background: var(--cf-surface-hover);
 }
 
 .host-dns-grid {
@@ -1075,7 +1075,7 @@
   align-items: center;
   height: 40px;
   font-size: 14px;
-  color: #777;
+  color: var(--cf-ink-tab);
 }
 
 .host-form-actions--left {

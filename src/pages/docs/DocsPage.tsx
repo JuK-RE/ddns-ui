@@ -3,10 +3,15 @@ import { Link, Navigate, useParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, ExternalLink } from 'lucide-react'
 import { useAuth } from '../../auth/AuthContext'
 import { DEFAULT_DOC, DOC_PAGES } from '../../docs'
-import { Markdown } from '../../docs/Markdown'
+// Nome sem ambiguidade de maiúsculas com './markdown' (o parser) — em
+// filesystem case-insensitive (Windows/macOS) 'Markdown' e 'markdown.ts'
+// colidem na resolução de módulo sem extensão e o bundler pode carregar o
+// arquivo errado. Ver src/docs/MarkdownRenderer.tsx.
+import { Markdown } from '../../docs/MarkdownRenderer'
 import { parseMarkdown, tocOf } from '../../docs/markdown'
 import { usePageMeta } from '../../seo/usePageMeta'
-import { BrandLockup, ButtonLink, SUPPORT_URL } from '../../ui'
+import { ButtonLink, SiteFooter, SUPPORT_URL } from '../../ui'
+import { JukWordmark } from '../../components/JukWordmark'
 import '../../App.css'
 import './Docs.css'
 
@@ -46,13 +51,13 @@ export function DocsPage() {
       <header className="docs-topbar">
         <div className="docs-topbar-left">
           <Link to="/home" aria-label="JUK.re DDNS — página inicial" className="docs-brand">
-            <BrandLockup height={14} />
+            <JukWordmark height={14} />
           </Link>
           <span className="docs-topbar-tag">Docs</span>
         </div>
         <div className="docs-topbar-right">
           <a className="docs-top-link" href={SUPPORT_URL} target="_blank" rel="noreferrer">
-            Suporte <ExternalLink size={12} />
+            <span>Suporte</span> <ExternalLink size={12} />
           </a>
           <ButtonLink to="/" size="sm">
             {user ? 'Abrir painel' : 'Entrar'}
@@ -119,6 +124,8 @@ export function DocsPage() {
           )}
         </aside>
       </div>
+
+      <SiteFooter compact />
     </div>
   )
 }
