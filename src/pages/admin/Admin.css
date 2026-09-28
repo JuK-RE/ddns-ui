@@ -499,40 +499,77 @@ a.admin-stat:hover {
   margin: 0;
 }
 
-/* ── Rodapé ── */
+/* ── Rodapé ──
+   3 zonas com grid (não flex): status+© fixos à esquerda, nav realmente
+   centralizada no meio (não "centralizada só se as pontas pesarem igual",
+   como dava com flex+space-between) e o tema fixo à direita. */
 .admin-footer {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 8px 20px;
-  padding: 14px 24px;
+  gap: 10px 24px;
+  padding: 16px 28px;
   border-top: 1px solid var(--admin-line);
   font-size: 13px;
 }
 
-.admin-footer nav {
+.admin-footer-zone {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
 }
 
-.admin-footer nav a {
+.admin-footer-start {
+  justify-content: flex-start;
+}
+
+.admin-footer-end {
+  justify-content: flex-end;
+}
+
+.admin-footer-copy {
+  color: var(--cf-ink-soft);
+  white-space: nowrap;
+}
+
+.admin-footer-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.admin-footer-nav a {
   color: var(--text-h);
   text-decoration: none;
-  padding: 0 12px;
+  padding: 0 14px;
   border-right: 1px solid var(--admin-line);
 }
 
-.admin-footer nav a:last-child {
+.admin-footer-nav a:last-child {
   border-right: 0;
 }
 
-.admin-footer nav a:hover {
+.admin-footer-nav a:hover {
   text-decoration: underline;
 }
 
-.admin-footer > span {
-  color: var(--cf-ink-soft);
+/* Telas estreitas (sidebar já em gaveta): perde sentido manter 3 colunas
+   lado a lado com pouco espaço, então empilha em 3 linhas centralizadas —
+   status, links e tema continuam todos ali, só que legíveis. */
+@media (max-width: 860px) {
+  .admin-footer {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 10px;
+    padding: 16px 20px;
+    text-align: center;
+  }
+
+  .admin-footer-start,
+  .admin-footer-end {
+    justify-content: center;
+  }
 }
 
 

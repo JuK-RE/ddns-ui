@@ -238,15 +238,19 @@ export function AdminLayout() {
         </main>
 
         <footer className="admin-footer">
-          <nav>
+          <div className="admin-footer-zone admin-footer-start">
+            <StatusBadge />
+            <span className="admin-footer-copy">© 2026 JUK.re DDNS</span>
+          </div>
+          <nav className="admin-footer-nav">
             <Link to="/docs">Docs</Link>
             <a href={SUPPORT_URL} target="_blank" rel="noreferrer">Suporte</a>
             <a href={ORG_URL} target="_blank" rel="noreferrer">GitHub</a>
             <Link to="/home">Site</Link>
           </nav>
-          <ThemeToggle />
-          <StatusBadge />
-          <span>© 2026 JUK.re DDNS</span>
+          <div className="admin-footer-zone admin-footer-end">
+            <ThemeToggle />
+          </div>
         </footer>
       </div>
     </div>

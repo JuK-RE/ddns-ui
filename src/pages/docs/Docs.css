@@ -43,6 +43,7 @@
 .docs-brand {
   display: inline-flex;
   align-items: center;
+  color: var(--text-h);
   text-decoration: none;
 }
 
@@ -122,6 +123,48 @@
 .docs-nav-link.is-active {
   background: var(--cf-surface-active);
   font-weight: 500;
+}
+
+/* Seletor da navegação no mobile (ver @media 800px) — mostra a página atual
+   e abre a lista completa por baixo, como o dropdown lateral do Agno.
+   No desktop a sidebar já fica sempre visível, então isso nem aparece. */
+.docs-nav-toggle {
+  display: none;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 11px 14px;
+  border: 1px solid var(--docs-line);
+  border-radius: 10px;
+  background: var(--cf-surface);
+  color: var(--text-h);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.docs-nav-toggle span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.docs-nav-toggle[aria-expanded='true'] {
+  border-radius: 10px 10px 0 0;
+  border-bottom-color: transparent;
+}
+
+.docs-nav-toggle-chevron {
+  flex-shrink: 0;
+  color: var(--cf-ink-soft);
+  transition: transform 0.15s ease;
+}
+
+.docs-nav-toggle[aria-expanded='true'] .docs-nav-toggle-chevron {
+  transform: rotate(180deg);
 }
 
 .docs-toc {
@@ -342,16 +385,34 @@
     grid-template-columns: minmax(0, 1fr);
     padding: 0 16px;
   }
+
+  .docs-nav-toggle {
+    display: flex;
+  }
+
+  /* Escondida por padrão: só aparece por baixo do toggle acima, como um
+     dropdown (não fica ocupando espaço da tela o tempo todo). */
   .docs-nav {
+    display: none;
     position: static;
     max-height: none;
-    padding: 16px 0 0;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--docs-line);
+    border-top: 0;
+    border-radius: 0 0 10px 10px;
+    background: var(--cf-surface);
+  }
+  .docs-nav.is-open {
     display: flex;
-    flex-wrap: wrap;
-    gap: 4px 20px;
+    flex-direction: column;
   }
   .docs-nav-group {
     margin-bottom: 8px;
+  }
+  .docs-nav-group:last-child {
+    margin-bottom: 0;
   }
   .docs-article {
     padding-top: 20px;

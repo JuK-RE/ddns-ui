@@ -1,6 +1,6 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, ExternalLink } from 'lucide-react'
+import { ArrowLeft, ArrowRight, ChevronDown, ExternalLink } from 'lucide-react'
 import { useAuth } from '../../auth/AuthContext'
 import { DEFAULT_DOC, DOC_PAGES } from '../../docs'
 // Nome sem ambiguidade de maiúsculas com './markdown' (o parser) — em
@@ -20,6 +20,16 @@ import './Docs.css'
 export function DocsPage() {
   const { slug } = useParams()
   const { user } = useAuth()
+  const [navOpen, setNavOpen] = useState(false)
+
+  // Nova página → fecha o menu de navegação mobile (ver .docs-nav-toggle no
+  // Docs.css). Ajuste de estado durante o render em vez de setState num
+  // effect (mesmo padrão do AdminLayout).
+  const [lastSlug, setLastSlug] = useState(slug)
+  if (lastSlug !== slug) {
+    setLastSlug(slug)
+    setNavOpen(false)
+  }
 
   const page = slug ? DOC_PAGES.find((p) => p.slug === slug) : DEFAULT_DOC
   const index = page ? DOC_PAGES.indexOf(page) : -1
@@ -66,7 +76,18 @@ export function DocsPage() {
       </header>
 
       <div className="docs-body">
-        <nav className="docs-nav" aria-label="Páginas da documentação">
+        <button
+          type="button"
+          className="docs-nav-toggle"
+          aria-expanded={navOpen}
+          aria-controls="docs-nav-list"
+          onClick={() => setNavOpen((open) => !open)}
+        >
+          <span>{page.title}</span>
+          <ChevronDown size={16} className="docs-nav-toggle-chevron" />
+        </button>
+
+        <nav id="docs-nav-list" className={`docs-nav${navOpen ? ' is-open' : ''}`} aria-label="Páginas da documentação">
           {groups.map((group) => (
             <div key={group} className="docs-nav-group">
               <span className="docs-nav-title">{group}</span>
