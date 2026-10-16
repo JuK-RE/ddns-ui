@@ -4,6 +4,8 @@ import type { Connector } from '../../types'
 import { CodeBlock, FieldRow } from './CodeBlock'
 
 // Tutoriais por conector, já preenchidos com o endereço e o token.
+// Na tela o token aparece sempre mascarado ("jukre_Q2x9••••••••"); o botão de
+// copiar leva o comando com o token completo (quando a tela o tem).
 // Scripts (curl, PowerShell, MikroTik) descobrem o IP público no ipify
 // (api.ipify.org = IPv4, api6.ipify.org = IPv6) e mandam em `?myip=`. Sem
 // isso, um PC com IPv4 e IPv6 pode chamar a API por IPv6 sem querer e
@@ -103,24 +105,35 @@ export function ConnectorGuide({
 }: {
   connector: Connector
   fqdn: string
-  /** Token completo (logo após criar/regenerar). Sem ele, o guia mostra o token mascarado. */
+  /** Token completo. A tela mostra sempre mascarado; o botão de copiar leva o token de verdade. Sem ele, não dá pra copiar. */
   token?: string | null
   tokenPrefix: string
 }) {
   const [interval, setIntervalValue] = useState<Interval>(15)
 
-  const masked = !token
-  const tokenText = token ?? `${tokenPrefix}••••••••`
-  const updateUrl = `${PUBLIC_UPDATE_BASE}/v1/update/${tokenText}`
+  const maskedToken = `${tokenPrefix}••••••••`
   const host = PUBLIC_UPDATE_BASE.replace(/^https?:\/\//, '')
-  const copyable = !masked
-  const ipv4Url = `${updateUrl}?myip=`
+  const copyable = Boolean(token)
+  const ipv4Url = (t: string) => `${PUBLIC_UPDATE_BASE}/v1/update/${t}?myip=`
+
+  // Cada bloco recebe uma função (token → texto): o código exibido usa o token
+  // mascarado e o que o botão copia usa o token completo.
+  const script = (lang: string, title: string, build: (t: string) => string) => (
+    <CodeBlock
+      lang={lang}
+      title={title}
+      copyable={copyable}
+      code={build(maskedToken)}
+      copyText={token ? build(token) : undefined}
+    />
+  )
 
   return (
     <div className="host-guide">
-      {masked && (
+      {!copyable && (
         <p className="host-hint">
-          O token aparece mascarado. Para ver a URL completa, gere um token novo (ele só é exibido uma vez).
+          Não foi possível carregar o token deste host, então os comandos não podem ser copiados. Gere um token novo para
+          copiar o comando completo.
         </p>
       )}
 
@@ -129,47 +142,21 @@ export function ConnectorGuide({
           <IntervalSelect value={interval} onChange={setIntervalValue} />
           <IpifyHint />
 
-          <CodeBlock
-            lang="bash"
-            title="Linux / macOS (cron): IPv4"
-            copyable={copyable}
-            code={`${cronFor(interval)} curl -fsS "${ipv4Url}$(curl -fsS https://api.ipify.org)" >/dev/null`}
-          />
+          {script(
+            'bash',
+            'Linux',
+            (t) =>
+              `(crontab -l 2>/dev/null | grep -v '/v1/update/'; echo '${cronFor(interval)} curl -fsS "${ipv4Url(t)}$(curl -fsS https://api.ipify.org)" >/dev/null') | crontab -`,
+          )}
+          <p className="host-hint">Rode no terminal. Se já existir uma entrada antiga do JUK.re no crontab, ela é substituída.</p>
 
-          <CodeBlock
-            lang="powershell"
-            title="Windows: teste"
-            copyable={copyable}
-            code={[
-              '$ip = Invoke-RestMethod "https://api.ipify.org"',
-              `Invoke-RestMethod "${ipv4Url}$ip"`,
-            ].join('\n')}
-          />
-
-          <CodeBlock
-            lang="powershell"
-            title={`Windows: agendar a cada ${interval} min`}
-            copyable={copyable}
-            code={[
-              `$acao = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument '-NoProfile -Command "$ip = Invoke-RestMethod https://api.ipify.org; Invoke-RestMethod (''${ipv4Url}'' + $ip)"'`,
+          {script('powershell', 'Windows', (t) =>
+            [
+              `$acao = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument '-NoProfile -Command "$ip = Invoke-RestMethod https://api.ipify.org; Invoke-RestMethod (''${ipv4Url(t)}'' + $ip)"'`,
               `$gatilho = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes ${interval}) -RepetitionDuration (New-TimeSpan -Days 3650)`,
-              `Register-ScheduledTask -TaskName 'JUKre DDNS' -Action $acao -Trigger $gatilho`,
-            ].join('\n')}
-          />
-
-          <CodeBlock
-            lang="bash"
-            title="IPv6 (opcional), Linux / macOS: só se a sua rede tem IPv6 público"
-            copyable={copyable}
-            code={`curl -fsS "${ipv4Url}$(curl -fsS https://api6.ipify.org)"`}
-          />
-
-          <CodeBlock
-            lang="powershell"
-            title="IPv6 (opcional), Windows"
-            copyable={copyable}
-            code={['$ip6 = Invoke-RestMethod "https://api6.ipify.org"', `Invoke-RestMethod "${ipv4Url}$ip6"`].join('\n')}
-          />
+              `Register-ScheduledTask -TaskName 'JUKre DDNS' -Action $acao -Trigger $gatilho -Force`,
+            ].join('\n'),
+          )}
         </>
       )}
 
@@ -183,17 +170,13 @@ export function ConnectorGuide({
             RouterOS (prefixo <code>JUK.re DDNS</code>).
           </p>
 
-          <CodeBlock
-            lang="routeros"
-            title="Terminal ou WinBox → New Terminal"
-            copyable={copyable}
-            code={mikrotikScript(`${ipv4Url}" . $ip . "&format=text`, 'ipify', routerosInterval(interval))}
-          />
+          {script('routeros', 'Terminal ou WinBox → New Terminal', (t) =>
+            mikrotikScript(`${ipv4Url(t)}" . $ip . "&format=text`, 'ipify', routerosInterval(interval)),
+          )}
 
           <CodeBlock
             lang="routeros"
             title="Rodar agora e ver o log"
-            copyable={copyable}
             code={[
               '# apaga o último IP salvo, pra forçar uma chamada à API',
               '/system script environment remove [find name="jukreLastIp"]',
@@ -207,12 +190,9 @@ export function ConnectorGuide({
             mesmo da última vez. Se aparecer <code>falha</code>, confira o token e o acesso do MikroTik à internet.
           </p>
 
-          <CodeBlock
-            lang="routeros"
-            title="Alternativa: IP público direto na interface de internet (sem ipify)"
-            copyable={copyable}
-            code={mikrotikScript(`${ipv4Url}" . $ip . "&format=text`, 'wan', routerosInterval(interval))}
-          />
+          {script('routeros', 'Alternativa: IP público direto na interface de internet (sem ipify)', (t) =>
+            mikrotikScript(`${ipv4Url(t)}" . $ip . "&format=text`, 'wan', routerosInterval(interval)),
+          )}
           <p className="host-hint">
             Só use esta se a interface de internet recebe um IP público. Troque <code>pppoe-out1</code> pela interface do seu
             MikroTik.
@@ -229,7 +209,7 @@ export function ConnectorGuide({
           <div className="host-fields">
             <FieldRow label="URL de atualização" value={`${PUBLIC_UPDATE_BASE}/nic/update?hostname=%HOST%&myip=%IP%`} />
             <FieldRow label="Usuário" value={fqdn} />
-            <FieldRow label="Senha" value={tokenText} copyable={copyable} />
+            <FieldRow label="Senha" value={maskedToken} copyText={token ?? undefined} copyable={copyable} />
           </div>
           <p className="host-hint">Para IPv6, crie uma segunda entrada de DNS dinâmico com o IP de IPv6 da WAN, se o seu firmware permitir.</p>
         </>
@@ -244,7 +224,7 @@ export function ConnectorGuide({
             <FieldRow label="Servidor" value={`${host}/nic/update?hostname=%h&myip=%i`} />
             <FieldRow label="Hostname" value={fqdn} />
             <FieldRow label="Usuário" value={fqdn} />
-            <FieldRow label="Senha" value={tokenText} copyable={copyable} />
+            <FieldRow label="Senha" value={maskedToken} copyText={token ?? undefined} copyable={copyable} />
           </div>
           <p className="host-hint">
             Se o gateway estiver atrás de CGNAT ou de outro roteador, o UniFi manda o IP privado da WAN em <code>%i</code>. Tudo
@@ -258,11 +238,8 @@ export function ConnectorGuide({
           <p className="host-guide-lead">
             Em <code>/etc/ddclient.conf</code>. O <code>daemon=900</code> checa a cada 15 min e só atualiza quando o IP muda.
           </p>
-          <CodeBlock
-            lang="ini"
-            title="/etc/ddclient.conf"
-            copyable={copyable}
-            code={[
+          {script('ini', '/etc/ddclient.conf', (t) =>
+            [
               'daemon=900',
               'use=web',
               'web=https://api.ipify.org',
@@ -273,10 +250,10 @@ export function ConnectorGuide({
               `server=${host}`,
               'ssl=yes',
               `login=${fqdn}`,
-              `password=${tokenText}`,
+              `password=${t}`,
               fqdn,
-            ].join('\n')}
-          />
+            ].join('\n'),
+          )}
         </>
       )}
 
