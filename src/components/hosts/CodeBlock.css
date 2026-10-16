@@ -15,10 +15,6 @@
   --hl-meta: #b45309;
 
   margin: 12px 0 0;
-  border: 1px solid var(--cf-line);
-  border-radius: 10px;
-  background: var(--code-bg);
-  overflow: hidden;
 }
 
 :root[data-theme='dark'] .code-block {
@@ -32,22 +28,12 @@
   --hl-meta: #e0af68;
 }
 
-.code-block-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  min-height: 38px;
-  padding: 5px 6px 5px 12px;
-  border-bottom: 1px solid var(--cf-line);
-  background: var(--cf-surface-hover);
-}
-
 .code-block-title {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 8px;
   min-width: 0;
+  margin-bottom: 6px;
 }
 
 .code-block-lang {
@@ -76,19 +62,40 @@
   color: var(--cf-ink-tab);
 }
 
-.code-block-locked {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
+/* Caixa: código à esquerda, botão de copiar numa coluna à direita */
+.code-block-box {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--cf-line);
+  border-radius: 10px;
+  background: var(--code-bg);
+  overflow: hidden;
+}
+
+.code-block-action {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
   flex-shrink: 0;
-  padding: 0 8px;
-  font-size: 12px;
+  width: 44px;
+  padding-top: 8px;
+  border-left: 1px solid var(--cf-line);
+}
+
+.code-block-locked {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
   color: var(--cf-ink-soft);
+  cursor: help;
 }
 
 .code-block pre {
+  flex: 1;
+  min-width: 0;
   margin: 0;
-  padding: 14px 16px;
+  padding: 10px 14px;
   overflow-x: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--cf-line) transparent;
@@ -103,8 +110,9 @@
   color: var(--hl-fg);
   font-family: var(--mono);
   font-size: 12.5px;
-  line-height: 1.7;
-  white-space: pre;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 /* Tokens do highlight.js */

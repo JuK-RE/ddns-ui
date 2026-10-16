@@ -8,7 +8,7 @@ import { CopyButton } from '../../components/hosts/CopyButton'
 import { HostRequestLog } from '../../components/hosts/HostRequestLog'
 import { HostStatusBadge } from '../../components/hosts/HostStatusBadge'
 import { TokenReveal } from '../../components/hosts/TokenReveal'
-import { CONNECTOR_LABEL, apiError, deleteHost, getHistory, getHost, hostStatus, regenerateToken, updateHost } from '../../lib/hosts'
+import { CONNECTOR_LABEL, apiError, deleteHost, getHistory, getHost, getHostToken, hostStatus, regenerateToken, updateHost } from '../../lib/hosts'
 import { formatDate, formatDateTime, relativeTime, useNow } from '../../lib/time'
 import type { Connector, Host, HostHistoryEntry } from '../../types'
 import { Button } from '../../ui'
@@ -31,6 +31,8 @@ export function HostDetailPage() {
 
   // Token novo (só existe na memória, logo após regenerar).
   const [freshToken, setFreshToken] = useState<string | null>(null)
+  // Token já existente (vem da API); alimenta o botão de copiar dos comandos.
+  const [storedToken, setStoredToken] = useState<string | null>(null)
   // Recarrega o log de requisições depois de uma ação daqui (token, configurações).
   const [logKey, setLogKey] = useState(0)
   const [modal, setModal] = useState<Modal>(null)
@@ -56,6 +58,7 @@ export function HostDetailPage() {
         if ((err as { response?: { status?: number } }).response?.status === 404) setNotFound(true)
         else setLoadError(true)
       })
+    getHostToken(id).then((t) => !cancelled && setStoredToken(t))
     getHistory(id)
       .then((h) => !cancelled && setHistory(h))
       .catch(() => !cancelled && setHistory([]))
@@ -211,7 +214,7 @@ export function HostDetailPage() {
 
       <section className="admin-card">
         <h2>Conexão</h2>
-        <ConnectorGuide connector={host.connector} fqdn={host.fqdn} token={freshToken} tokenPrefix={host.token_prefix} />
+        <ConnectorGuide connector={host.connector} fqdn={host.fqdn} token={freshToken ?? storedToken} tokenPrefix={host.token_prefix} />
       </section>
 
       <section className="admin-card">

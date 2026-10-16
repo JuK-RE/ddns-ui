@@ -2,8 +2,8 @@ import { api } from './api'
 import type { Availability, Connector, Host, HostHistoryEntry, HostLogEntry, HostStatus, Zone } from '../types'
 
 // Chamadas do painel de hosts. Tudo pelo `api` (axios em /api, com o cookie
-// de sessão). O token do host só existe na resposta de createHost/regenerateToken
-// e na memória da tela que o exibe — nunca é guardado.
+// de sessão). O token do host chega em createHost/regenerateToken e em
+// getHostToken; fica só na memória da tela (o front não guarda em storage).
 
 export const MAX_HOSTS = 5
 
@@ -54,6 +54,20 @@ export async function updateDns(
 export async function regenerateToken(id: string): Promise<{ token: string; token_prefix: string }> {
   const { data } = await api.post<{ token: string; token_prefix: string }>(`/hosts/${id}/token`)
   return data
+}
+
+/**
+ * Token atual do host, pra montar o comando completo do botão "copiar".
+ * `null` se a API não devolver (404, não configurado) — a tela cai no modo
+ * "token indisponível" em vez de quebrar.
+ */
+export async function getHostToken(id: string): Promise<string | null> {
+  try {
+    const { data } = await api.get<{ token: string }>(`/hosts/${id}/token`)
+    return data.token || null
+  } catch {
+    return null
+  }
 }
 
 export async function deleteHost(id: string): Promise<{ available_at: string }> {

@@ -5,19 +5,24 @@ import { CopyButton } from './CopyButton'
 import './CodeBlock.css'
 
 /**
- * Bloco de código com cores (highlight.js) e botão "Copiar".
+ * Bloco de código compacto (estilo Cloudflare): rótulo pequeno em cima e, na
+ * caixa, o código com cores (highlight.js) e um botão de copiar do lado.
  * - `lang`: 'routeros' | 'powershell' | 'bash' | 'ini' | 'json' (e apelidos, ver lib/highlight.ts).
- * - `copyable={false}` quando o texto tem o token mascarado: no lugar do botão
- *   aparece um aviso, pra ninguém colar um token com "••••" no roteador.
+ * - `code` é o que aparece (com o token mascarado); `copyText` é o que vai pra
+ *   área de transferência (com o token de verdade). Sem `copyText`, copia `code`.
+ * - `copyable={false}` quando não há token completo: no lugar do botão aparece
+ *   um cadeado, pra ninguém colar um token com "••••" no roteador.
  */
 export function CodeBlock({
   code,
+  copyText,
   title,
   lang,
   copyable = true,
   children,
 }: {
   code: string
+  copyText?: string
   title?: string
   lang?: string
   copyable?: boolean
@@ -29,38 +34,53 @@ export function CodeBlock({
 
   return (
     <div className="code-block">
-      <div className="code-block-head">
-        <span className="code-block-title">
+      {(badge || title) && (
+        <div className="code-block-title">
           {badge && <span className="code-block-lang">{badge}</span>}
           {title && <span className="code-block-name">{title}</span>}
-        </span>
-        {copyable ? (
-          <CopyButton text={code} label="Copiar código" showLabel />
-        ) : (
-          <span className="code-block-locked" title="Gere um token novo para copiar o comando completo">
-            <Lock size={12} /> Token oculto
-          </span>
-        )}
+        </div>
+      )}
+      <div className="code-block-box">
+        <pre>
+          {html !== null ? (
+            <code className={`hljs language-${language}`} dangerouslySetInnerHTML={{ __html: html }} />
+          ) : (
+            <code>{code}</code>
+          )}
+        </pre>
+        <div className="code-block-action">
+          {copyable ? (
+            <CopyButton text={copyText ?? code} label="Copiar código" />
+          ) : (
+            <span className="code-block-locked" title="Token indisponível: gere um token novo para copiar o comando completo">
+              <Lock size={14} />
+            </span>
+          )}
+        </div>
       </div>
-      <pre>
-        {html !== null ? (
-          <code className={`hljs language-${language}`} dangerouslySetInnerHTML={{ __html: html }} />
-        ) : (
-          <code>{code}</code>
-        )}
-      </pre>
       {children}
     </div>
   )
 }
 
 /** Linha "campo → valor" (pfSense, UniFi…) com botão de copiar. */
-export function FieldRow({ label, value, copyable = true }: { label: string; value: string; copyable?: boolean }) {
+export function FieldRow({
+  label,
+  value,
+  copyText,
+  copyable = true,
+}: {
+  label: string
+  value: string
+  /** O que vai pra área de transferência, se for diferente do exibido (token mascarado). */
+  copyText?: string
+  copyable?: boolean
+}) {
   return (
     <div className="host-field-row">
       <span className="host-field-label">{label}</span>
       <code>{value}</code>
-      {copyable ? <CopyButton text={value} label={`Copiar ${label}`} /> : <span />}
+      {copyable ? <CopyButton text={copyText ?? value} label={`Copiar ${label}`} /> : <span />}
     </div>
   )
 }
